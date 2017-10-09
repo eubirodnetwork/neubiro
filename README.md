@@ -2,7 +2,7 @@
 
 this is the repository for the NeuBiro software.
 
-You can download the binary arifacts from https://github.com/eubirodnetwork/neubiro/releases of from the following links:
+You can download the binary arifacts from https://github.com/eubirodnetwork/neubiro/releases or from the following links:
 
 - [NeuBiro installer](https://github.com/eubirodnetwork/neubiro/releases/download/0.7.1/neubiro-installer-0.7.1.jar)
 - [NeuBiro user's guide](https://github.com/eubirodnetwork/neubiro/releases/download/0.7.1/usersguide.pdf)
