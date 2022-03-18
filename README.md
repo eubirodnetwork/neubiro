@@ -1,10 +1,12 @@
 # NeuBiro
 
-this is the repository for the NeuBiro software.
+NEW Release available: NeuBiro 2022 (v. 1.0)
 
-You can download the binary arifacts from https://github.com/eubirodnetwork/neubiro/releases or from the following links:
+You can download the latest version directly below:
 
-- [NeuBiro installer](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/neubiro-installer-1.0.jar)
-- [NeuBiro zip](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/neubiro-1.0.zip)
-- [NeuBiro user's guide](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/usersguide.pdf)
-- [NeuBiro programmer's guide](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/programmersguide.pdf)
+ [NeuBiro installer (for clean installation on Windows/Mac/Linux - requires JAVA 11 + R)](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/neubiro-installer-1.0.jar)
+ [NeuBiro zip (specific for MS Windows 10 - requires only R)](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/neubiro-1.0.zip)
+ [NeuBiro Getting Started (User's Guide)](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/gettingstarted.pdf)
+ [NeuBiro Programmer's Guide](https://github.com/eubirodnetwork/neubiro/releases/download/1.0/programmersguide.pdf)
+
+The binary files for all releases are available at: [https://github.com/eubirodnetwork/neubiro/releases](https://github.com/eubirodnetwork/neubiro/releases).
