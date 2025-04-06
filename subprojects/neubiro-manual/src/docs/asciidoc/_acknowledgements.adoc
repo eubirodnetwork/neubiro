@@ -1,0 +1,11 @@
+== Acknowledgements
+ 
+The main developers for NeuBiro are:
+
+[options="header", cols="15,25,60"]
+|===
+| Developer        | email                      | Role 
+| Stefano Gualdi   | stefano.gualdi@gmail.com   | NeuBiro software, documentation, Java/Grovvy programming
+| Fabrizio Carinci | fabcarinci@gmail.com       | Statistical analysis and programming of the statistical packages, R Language, Documentation
+| Iztok Stotl      | iztok.stotl@guest.arnes.si | Documentation, beta testing
+|===

@@ -1,0 +1,123 @@
+// @See: https://github.com/rburgst/okhttp-digest/issues/86
+// @See: https://github.com/asciidoctor/asciidoctor-gradle-plugin/issues/731#issuecomment-2233782799
+buildscript {
+  configurations.classpath {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      if (details.requested.group == 'com.burgstaller' && details.requested.name == 'okhttp-digest' && details.requested.version == '1.10') {
+        details.useTarget "io.github.rburgst:${details.requested.name}:1.21"
+        details.because 'Dependency has moved'
+      }
+    }
+  }
+}
+
+plugins {
+  id 'java'
+  id 'distribution'
+
+  id 'org.asciidoctor.jvm.convert' version '3.2.0'
+  id 'org.asciidoctor.jvm.pdf' version '3.2.0'
+  id 'org.asciidoctor.jvm.gems' version '3.2.0'
+}
+
+version = neubiroVersion
+ext {
+  date = '2022-02-11'
+  author = 'Fabrizio Carinci, Stefano Gualdi'
+}
+
+repositories {
+  mavenCentral()
+  // jcenter()
+  ruby.gems()
+}
+
+dependencies {
+  asciidoctorGems 'rubygems:rouge:3.15.0'
+  asciidoctorGems 'rubygems:asciidoctor-diagram:2.0.2'
+}
+
+pdfThemes {
+  local 'eubirod', {
+    themeDir = file('src/docs/themes/eubirod')
+    themeName = 'eubirod'
+  }
+}
+
+asciidoctorPdf {
+
+  dependsOn asciidoctorGemsPrepare
+
+  baseDirFollowsSourceFile()
+
+  theme 'eubirod'
+
+  asciidoctorj {
+    requires 'rouge'
+    requires 'asciidoctor-diagram'
+    attributes 'build-gradle': file('build.gradle'),
+      'sourcedir': project.sourceSets.main.java.srcDirs[0],
+      'imagesoutdir': "${buildDir}/asciidoc/images",
+      'neubiroversion': neubiroVersion,
+      'version': project.version,
+      'date': project.date,
+      'author': project.author,
+      'source-highlighter': 'rouge',
+      'imagesdir': './images',
+      'toc': 'left',
+      'icons': 'font',
+      'idprefix': '',
+      'idseparator': '-'
+  }
+
+  outputDir = file('build/documentation/pdf')
+}
+
+asciidoctor {
+
+  dependsOn asciidoctorGemsPrepare
+
+  baseDirFollowsSourceFile()
+
+  asciidoctorj {
+    requires 'rouge'
+    requires 'asciidoctor-diagram'
+    attributes 'build-gradle': file('build.gradle'),
+      'sourcedir': project.sourceSets.main.java.srcDirs[0],
+      'neubiroversion': neubiroVersion,
+      'version': project.version,
+      'date': project.date,
+      'author': project.author,
+      'source-highlighter': 'rouge',
+      'imagesdir': './images',
+      'toc': 'left',
+      'icons': 'font',
+      'idprefix': '',
+      'idseparator': '-'
+  }
+
+  outputDir = file('build/documentation/html')
+}
+
+// Generate all docs (HTML + PDF)
+task docs(dependsOn: [asciidoctorPdf, asciidoctor]) {
+  group "documentation"
+}
+
+distributions {
+  main {
+    contents {
+      from(file("$buildDir/documentation/pdf")) {
+        include '*.pdf'
+        into "pdf"
+      }
+
+      from(file("$buildDir/documentation/html")) {
+        include 'images/**'
+        include '*.html'
+        into "html"
+      }
+    }
+  }
+}
+distZip.dependsOn docs

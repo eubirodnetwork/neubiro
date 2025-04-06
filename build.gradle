@@ -1,0 +1,194 @@
+/*
+ * Copyright 2014-2022 Stefano Gualdi, AGENAS.
+ *
+ * Licensed under the European Union Public Licence (EUPL), Version 1.1 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://joinup.ec.europa.eu/software/page/eupl/licence-eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @author Stefano Gualdi <stefano.gualdi@gmail.com>
+ */
+import org.apache.tools.ant.filters.ReplaceTokens
+
+buildscript {
+  repositories {
+    // jcenter()
+    mavenCentral()
+    maven { url 'https://plugins.gradle.org/m2/' }
+    maven { url 'https://repo1.maven.org/maven2/' }
+  }
+
+  dependencies {
+    classpath 'org.gradle.api.plugins:gradle-izpack-plugin:0.2.3'
+    classpath "com.github.breadmoirai:github-release:2.2.12"
+  }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'izpack'
+apply plugin: 'idea'
+
+apply from: 'gradle/githubPublish.gradle'
+
+repositories {
+  // jcenter()
+  mavenCentral()
+  maven { url 'https://plugins.gradle.org/m2/' }
+}
+
+dependencies {
+  izpack 'org.codehaus.izpack:izpack-standalone-compiler:4.3.5'
+  compile group: 'io.github.rburgst', name: 'okhttp-digest', version: '2.5'
+//Thanks for using https://jar-download.com
+
+}
+
+subprojects { subproj ->
+  apply plugin: 'groovy'
+
+  ext {
+    neubiroVersion = project(':neubiro-app').version
+  }
+
+  if (plugins.hasPlugin('java')) {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+  }
+}
+
+subprojects.each { subproject -> evaluationDependsOn(subproject.path) }
+
+task dist(type: Copy) {
+  description 'Create single distributions'
+
+  dependsOn ':neubiro-app:distZip', ':neubiro-manual:distZip', 'neubiro-sample-package:distZip'
+
+  // NeuBiro app
+  from(project(':neubiro-app').file('build/distributions')) {
+    include '*.zip'
+    include '*.dmg'
+  }
+
+  // NeuBiro documentation
+  from(project(':neubiro-manual').file('build/distributions')) {
+    include '**/*.zip'
+  }
+
+  // NeuBiro sample statistical package
+  from(project(':neubiro-sample-package').file('build/distributions')) {
+    include '**/*.zip'
+  }
+
+  into "${buildDir}/distributions"
+}
+
+task prepareIzpack(type: Copy) {
+  dependsOn ':neubiro-app:distZip', ':neubiro-manual:distZip', 'neubiro-sample-package:distZip'
+
+  destinationDir = file("$buildDir/install/izpack")
+
+  def resourcesDir = "src/main/izpack/resources"
+
+  ['html', 'panels'].each {
+    from("${resourcesDir}/${it}") {
+      into 'resources'
+      filter(ReplaceTokens, tokens: ['app.version': version])
+      exclude '**/*.png'
+      exclude '**/*.jpg'
+    }
+  }
+
+  from("${resourcesDir}/images") {
+    into 'resources'
+    include '**/*.png'
+    include '**/*.jpg'
+  }
+
+  // Prepare NeuBiro
+  from zipTree(file("${project(':neubiro-app').buildDir}/distributions/${project(':neubiro-app').distZip.archiveName}"))
+
+  // Prepare NeuBiro documentation
+  from zipTree(file("${project(':neubiro-manual').buildDir}/distributions/${project(':neubiro-manual').distZip.archiveName}"))
+
+  // Prepare NeuBiro sample statistical package
+  from zipTree(file("${project(':neubiro-sample-package').buildDir}/distributions/${project(':neubiro-sample-package').distZip.archiveName}"))
+
+}
+
+prepareIzpack.doLast {
+  def path = "${buildDir}/install/izpack"
+  [
+    'neubiro-app',
+    'neubiro-manual',
+    'neubiro-sample-package'
+  ].each { name ->
+    def project = project(":${name}")
+    def version = "${project.version}"
+    def curName = "${project.distZip.archiveName}" - '.zip'
+    def newName = curName - ('-' + version)
+    def newFile = file("${path}/${newName}")
+    if (newFile.exists()) {
+      newFile.deleteDir()
+    }
+    file("${path}/${curName}").renameTo(newFile)
+  }
+}
+
+izPackCreateInstaller.dependsOn prepareIzpack
+izPackCreateInstaller.doFirst {
+  ant.chmod(dir: "$buildDir/install/izpack/neubiro/bin", excludes: '*.bat', perm: 'ugo+x')
+}
+build.dependsOn izPackCreateInstaller
+
+izpack {
+  baseDir = file("$buildDir/install/izpack")
+
+  def projectName = "NeuBiro"
+  def projectVersion = project(':neubiro-app').version
+
+  installFile = file('src/main/izpack/install.xml')
+  outputFile = file("$buildDir/distributions/${project.name}-installer-${projectVersion}.jar")
+
+  installerType = 'standard'
+
+  compression = 'deflate'
+  compressionLevel = 9
+
+  appProperties = [
+    'app.group'       : 'NeuBiro',
+    'app.name'        : projectName,
+    'app.title'       : projectName,
+    'app.version'     : projectVersion,
+    'app.subpath'     : "${projectName}-${projectVersion}",
+    'app.binary'      : projectName,
+    'app.java.version': targetCompatibility
+  ]
+}
+
+task installer {
+  description 'Create the installer'
+}
+installer.dependsOn izPackCreateInstaller
+
+// githubRelease.dependsOn dist, installer
+
+idea {
+  project {
+    jdkName = '11'
+    languageLevel = '11'
+    vcs = 'Git'
+  }
+}
+
+wrapper {
+  gradleVersion = '6.8'
+}

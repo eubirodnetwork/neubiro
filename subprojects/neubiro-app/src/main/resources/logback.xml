@@ -1,0 +1,68 @@
+<!--
+
+    Copyright 2014-2025 Stefano Gualdi, AGENAS.
+
+    Licensed under the European Union Public Licence (EUPL), Version 1.1 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+          http://joinup.ec.europa.eu/software/page/eupl/licence-eupl
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>neubiro.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>neubiro_%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>5MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>30</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <charset>UTF-8</charset>
+      <pattern>%d %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Root logger -->
+  <root level="ERROR">
+    <appender-ref ref="FILE"/>
+    <appender-ref ref="STDOUT"/>
+  </root>
+
+  <!-- Griffon logging -->
+  <logger name="griffon" additivity="false" level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+  <logger name="org.codehaus.griffon" additivity="false" level="ERROR">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+  <logger name="org.codehaus.griffon.runtime.core.AbstractApplicationBootstrapper" additivity="false" level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+  <logger name="org.codehaus.griffon.runtime.core.DefaultApplicationBootstrapper" additivity="false" level="INFO">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <!-- App logging -->
+  <logger name="eu.eubirod.neubiro" additivity="false" level="DEBUG">
+    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="FILE"/>
+  </logger>
+
+</configuration>

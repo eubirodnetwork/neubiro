@@ -1,0 +1,2024 @@
+= NeuBiro: Programmer's guide
+:revdate:{date}
+:revnumber: {version}
+:icons: fa
+// :source-highlighter: pygments
+:doctype: book
+:toc:
+:toclevels: 3
+:toc-title: Table of contents
+:chapter-label:
+:figure-caption: Figure
+:sectnums:
+:experimental:
+ifndef::imagesdir[:imagesdir: ./images]
+// Variables
+:javaversion: 11
+:rversion: 4.1.x
+// Default width for images
+// :width100: 450
+:width100: 650
+:width50: 275
+:width25: 137
+// Document is in draft mode
+:draft-mode:
+
+ifdef::draft-mode[]
+
+ifeval::["{backend}" == "pdf"]
+endif::[]
+
+ifeval::["{backend}" == "html5"]
+endif::[]
+
+== Introduction
+
+This guide will introduce the concepts underlying the structure of Neubiro and provide all the details needed to proceed with its successful execution. The target audience of this manual includes advanced users e.g. hands-on data managers, programmers and statistical analysts involved in research in different areas.
+
+The NeuBIRO software has been specifically designed to perform a statistical analysis over multiple sources from a distributed framework e.g. a network of federated databases. The software has been structured to be completely independent ("_agnostic_") from the data provided for the analysis, so that any type of application could be potentially targeted. However, such an attractive feature comes at a price. In face, each component of the analytical process in NeuBIRO needs to be properly using a number of configured specifications files, including commands based on a simple DSL (Domain Specific Language). The correct specification of these files represents the main goal of this manual.
+
+Understanding the functionality of NeuBIRO requires further insight into the specific method adopted for data processing and statistical analysis.
+
+=== The BIRO approach
+
+NeuBIRO is based on the methodology of _"Best Information through Regional Outcomes"_ (BIRO), which has been specifically designed to tackle health applications. In the health sector, the sensitive nature of personal data collected by care providers hampers the creation and maintainance of central repositories, where relational databases could be conveniently managed and subsequently analysed. For this reason, research networks have conceived federated environments, in which the same software operates across different centres, sharing elements e.g. data standards, aggregate data, and data processing routines, rather than individual level records. This architecture can be complex, as it requires that all procedures are fully specified in advance, creating the need to design, implement and deploy common software.
+
+The _BIRO approach_ is a method specifically developed in three consecutive EU projects: a) “Best Information through Regional Outcomes (BIRO), 2005-2008 (http://www.biro-project.eu); b) “European Best Information through Regional Outcomes in Diabetes (EUBIROD), 2008-2012 (http://www.eubirod.eu); and c) Bridge Health, 2015-2017 (Task 8.2, https://www.bridge-health.eu). The methodology can be generally applied to tackle a range of problems with the common goal of performing a correct epidemiologic analysis on top of federated data. 
+
+The full development cycle of the BIRO approach envisages a series of ten steps, consisting of <<carincibiro>>: 
+
+. definition of main dimensions to be explored
+. revision of data sources 
+. agreement of a common reporting template
+. privacy impact assessment
+. selection of the best information architecture
+. production of a data dictionary of standardized definitions
+. development of database, statistical and integrated software
+. data collection and analysis
+. technology transfer 
+. evaluation
+
+NeuBIRO is the tool that incorporates all the specifications agreed in this process. The software allows adopting the preferred privacy-enhanced infrastructure to collect and analyse data in a safe environment. This guide will show how to setup, use and customise NeuBIRO, so that it can be repeatedly in a range of applications.
+
+=== Phases of BIRO processing
+
+The BIRO analytical process incorporates five phases: configuration, data import and quality check, local statistical processing, transfer to central server and central statistical processing.  The first four phases are required for nodes in which individual-level data are stored in the database, while the final phase is dedicated to nodes at higher levels, where aggregated data derived from previous applications of the software are processed. 
+
+An overview of the workflow implemented in NeuBiro to apply the BIRO approach is shown in Figure 1.
+
+.overview of the main workflow
+[ditaa, target=main-workflow]
+....
+
++---------------+  +---------------------------------+  +------------------------------+  +----------------------------+  +--------------------------------+
+| Configuration +->| Data import and Quality Check   +->| Local Statistical processing +->| Transfer to Central Server +->| Central Statistical Processing |
++---------------+  +---------------------------------+  +------------------------------+  +-+--------------------------+  +--------------------------------+
+                   |                                 |  |                              |    :                       ^                     :
+                   | o process import specifications |  |    o prepare data            |    | Collect and aggregate |                     |            
+                   | o populate internal (H2) DB     |  |    o run statistical code    |    |    "local" results    |                   +-+-------------+
+                   | o generate calculated fields    |  |    o create "local" results  |    |    for each centre    |                   |  Generate     |
+                   |                                 |  |                              |    |                       |                   |  "global" PDF |
+                   |                                 |  |                              |    |                       |                   |   report {d}  |
+                   |                                 |  |                              |    +-----------------------+                   +---------------+
+                   +---------------------------------+  +--+---------------------------+         
+                                                           :                   ^
+                                                           |                   |
+                                                           |  for each module  |
+                                                           +-------------------+
+....
+
+The five phases can be briefly described as follows:
+
+* *Configuration*: each data source is linked to a “data source profile” stored in a meta-registry, including information on data stored at each node, structural characteristics e.g. personnel etc., geographical data and data protection procedures.
+* *Data Import and quality check*: when individual data are processed, local data files are loaded into a standardized database, based on specifications also included in the meta-registry. Contextual data can be added as “population tables”. A “mapping” function is used to adapt local data to the agreed standard.
+* *Local Statistical processing*: SQL queries extract and aggregate records of the internal database to facilitate statistical analysis. Subsequently, statistical routines are applied to deliver outputs in different formats, producing aggregate “statistical objects”, i.e. data snippets that can be effectively saved as bundles of flat CSV files and/or R objects.
+* *Transfer to Central Server*: the platform sends packages of aggregated data towards a central server, adding a descriptor file that allows identifying origin nodes in a central database available for international comparisons
+* *Central Statistical Processing*: statistical objects are loaded into a cumulative database that can apply regression and meta-analytic techniques. From this point on all data indicators are completely standardized. The last two phases can be replicated in a recursive fashion, transferring results to higher levels or federated networks. 
+
+NeuBIRO implements the above phases in a simple interface that helps driving the process towards its full conclusion. 
+To help understanding the configuration and use of NeuBIRO, this programmer's guide will include a working example on "synthetic" diabetes data that will be used throughout the text. The basic features of the diabetes application will be presented in the following section.  
+
+=== The sample package: a full working example
+
+NeuBiro includes a sample package that allows testing the different functionalities of the software through a full working example. The demo will focus on an application in quality of care in diabetes, which includes different uses of the various steps presented in this manual.
+
+After a successful install of NeuBIRO, the layout of subdirectories appearing under the root directory will be the following:
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
+<root> // <1>
++-- docs // <2>
++-- packages // <3>
+  +-- sample-package // <4>
+   +-- data // <5>
+    +-- data folders // <6>
+     `-- .csv // <7>
+    +-- import // <8>
+     `-- .specs // <9>
+    +-- indicators // <10>
+     +-- indicators folders // <11>
+     `-- implementation.r // <12>
+     `-- indicator.r // <12>
+     `-- indicator.specs // <12>
+    +-- tools // <13>
+     `-- tools files // <14>
+----
+<1>  Main installation folder
+<2>  Documentation in PDF/HTML format
+<3>  Directories of packages
+<4>  Fully working example main folder
+<5>  Data directory
+<6>  Data folders
+<7>  Datasets
+<8>  Import specifications
+<9>  Import spec files
+<10> Statistical modules directory
+<11> Indicators subdirectory
+<12> Indicators files
+<13> Tools folders
+<14> Tools files
+
+The following subsection will provide fundamental elements of the data included in the data folders of the sample package root directory.
+
+=== Explaining the datasets of the sample package
+
+The main goal of NeuBIRO is to analyse a series of complex datasets related to a common theme of investigation. In health research, measuring indicators related to a specific phenomenon involving different groups, frequently requires a range of statistical techniques e.g. descriptive measures, frequency tables, graphical visualization and advanced multivariate models. In all these steps, one or more data sources are used to test any differences among relevant units of interest, e.g. clinical centres. Most often, multiple data sources are needed at each centre to perform a complete statistical analysis to explore the problem in depth. 
+
+In this manual, we will present a full working example in quality of care in diabetes, using the framework implemented in the EUBIROD project. 
+
+The information provided here refers to the data included in the subdirectory of the <root> installation: <root>/packages/sample-package/data.
+
+An understanding of the specific problem is essential to underpin a correct analysis and interpretation of the results.
+Diabetes is a chronic disease that may cause permanent damage to the human body, through a decreased capacity of the pancreas, resulting into an excess of sugar in the blood. This condition can cause a range of complications (comorbidities) and problems that need to be tackled appropriately through repeated visits per year, eventually from different specialists. At each visit, various parameters are measured. The correct execution of all examinations in due time is the subject of studies on quality of care. These studies aim to ascertain which characteristics are associated with decreased quality of care, or increased risk of negative outcomes, e.g. low frequency of testing or high level of sugar in the blood, using parameters e.g. glycated haemoglobin (HbA1c). 
+
+To highlight the general value or the working example, from now on we will refer to each "clinical centre" collecting data during diabetes visits as the "data source".
+
+There are different types of data that should be considered in these kind of investigations. In diabetes, members of the EUBIROD network agreed that two types of databases should be considered in the analysis: 
+
+* personal data recorded into data sources at each encounter with the health care system (record)
+* population-based data used as a reference area for each data source, split into one or more sub data sources, whose characteristics are stored at a central registry.
+
+In the category of _personal data_, there are two main datasets to be considered: 
+
+* *"Merge" dataset*, or Master Table, which includes records for all visits at each data source
+* *"Activity" dataset*, or client master index, reporting the state of entry/exit of each patient in an "active" list, including those expeted to be visited at each conventional timeframe (e.g. year). 
+
+In the category of _population-based data_, we will consider the following datasets: 
+
+* *"population" table*, including the total population by age band in the geographical area of the data source
+* *"diabetic population" table*, including the total number of people with diabetes by age band in the geographical area of data source
+* *"site profile" table*, including the characteristics of each data source (sub-data sources)
+* *"georef" table*, georeferences to link the databases to their location
+* *"site header" table*, additional characteristics to georeference the data source (sub-data sources)
+
+For the definition of items included in the above datasets, please refer to the Appendix.
+
+In the application presented here, we will use data extracted from the original set of centres of the Umbria Region used that were used to test the software. Using the R syn.strata() function of the synthpop library, we have created synthetic (fictitious) data replicating the composition of the original subgroups, by perturbating and resampling the original bundle. This technique allows preserving privacy, while testing samples of different sizes. As a result, 4 different bundles of .csv datasets have been included in the present release of NeuBIRO. In each bundle, the size of the merge and activity tables have been highlighted in the naming convention, including a label of "max", "mid", "samesize" and "small".
+
+For convenience, we have used only one set of population-based datasets, assuming that different sizes of the merge and activity datasets are related to different amounts of records/visits/population covered in the data sources (for an in depth description of the degree of completeness and heterogeneity of contents of data sources in diabetes see <<cunninghambiro>>,<<carinciregistries>>).
+
+All the above datasets are stored in .csv files that are used as the input stream of NeuBIRO. A typical merge dataset will include a header showing the names of the columns at source:
+
+[source,csv]
+----
+sub_idCentro,idPaziente,dataDiNascita,Sesso,dataDiagnosiDiabete,tipoDiabete,Altezza,idCentro,data,BMI,Colesterolo,Colesterolo_HDL,Colesterolo_LDL,Creatinina,Emoglob.Glicata_HBA1C,Glicemia_a_digiuno,Microalbuminuria,Peso,Pressione_Diastolica,Pressione_Sistolica,Trigliceridi_post_12h_dig,Insulina,Metformina,Ipoglicemizzanti_Orali,Drug_Therapy,Count
+ITE34,5,1930-07-24,F,1993-07-27,2,,ITE34,2001-09-14,,212,201,,,7.6,,,,80,120,,0,0,0,4,1
+ITE34,7,1958-08-07,M,1992-02-26,1,174,ITE34,2002-11-06,25.9,,,,,,195,,49.5,80,105,,1,0,0,1,1
+....
+----
+
+One or more datasets, stored in .csv with similar formatting, can be simultaneously processed in NeuBIRO, passing proper instructions to select and transform columns needed by the application, using SQL queries to further process and customise how the source data are stored in the internal H2 database. In the next chapters, we will show how to perform these steps using the import routines.
+
+=== Examples of hierarchical analysis
+
+Before going into further detail, it is important to show how the BIRO approach can be used in NeuBIRO to deliver a global analysis using a hierarchical structure of nested data sources across the entire network. This scheme will show how to use NeuBIRO to sequentially process individual data in the first step, and aggregate data in all the following ones.
+
+Here is the structure and contents of the data directory:
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
++-- <root>/packages/sample-package/data <1>
+    +-- ITE34 <2>
+    |   +-- neubirod_max_activity_table.csv <3>
+    |   `-- neubirod_max_merge_table.csv <3>
+    |   `-- neubirod_mid_merge_table.csv <3>
+    |   `-- neubirod_mid_merge_table.csv <3>
+    |   `-- neubirod_samesize_merge_table.csv <3>
+    |   `-- neubirod_samesize_table.csv <3>
+    |   `-- neubirod_small_merge_table.csv <3>
+    |   `-- neubirod_population_table.csv <4>
+    |   `-- neubirod_diabetic_population_table.csv <4>
+    |   `-- neubirod_georef.csv <4>
+    |   `-- neubirod_siteheader.csv <4>
+    |   `-- neubirod_siteprofile.csv <4>
+    +-- ITE42 <2>
+    |   +-- ...
+    +-- ITE42 <2>
+    |   +-- ...
+    +-- ITF <2>
+    |   +-- ...
+    +-- ITG2A <2>
+    |   +-- ...
+----
+<1> data folder root
+<2> data source folder
+<3> max, mid, samesize, and small personal data 
+<4> population-based tables
+
+The structure of data folders has been designed to reflect data fragmentation across a geographical network. Each data folder includes different datasets for geocodes, related to different levels of European NUTS codes (https://ec.europa.eu/eurostat/web/nuts/background). The sample datasets belong to different provinces, each within one region, except in one case. As you will note, the data source with NUTS 1 code equal to "ITF", notably at a higher NUTS level (macro sub-national area, or level 2), lists three provinces in the same dataset. This situation may occur when jurisdictional or administrative reasons require for data to be pooled before any analysis. This means that a bundle of data sources are included in the same .csv file that will be loaded in NeuBIRO. This is a case occurring in many concrete cases. For instance, in Germany, different insurance funds can include data from rather dispersed geographical areas. In Italy, several registers are maintained at regional level, pooling data from different provinces (although in the example, to keep the population size consistent, the data source refers to provinces from different regions).
+
+The following table summarizes the contents of the sample package in terms of Merge tables of different sizes:
+
+[options="header", cols="<10,^7,<12,^7,<12,^16,>10,>8,>8,>8"]
+|===
+| COUNTRY | NUTS0 | MACROAREA | NUTS1 | PROVINCE      | NUTS2             |     N Max |  N Mid  | N Same  | N Min 
+| Italy   | IT    | Centre    | ITE   | Ascoli Piceno | ITE34             |   152,033 |  18,257 | 10,616  |    56
+| Italy   | IT    | Centre    | ITE   | Rieti         | ITE42             |   194,072 |  23,413 | 13,653  |    69
+| Italy   | IT    | South     | ITF   | PE,IS,KR      | ITF13,ITF23,ITF62 | 2,029,563 | 243,511 | 141,455 |   827
+| Italy   | IT    | Islands   | ITG   | Ogliastra     | ITG2A             |   124,332 |  14,819 |  8,605  |    48 
+|===
+
+In the previous table, the datasets for NUTS Level 1 equal to ITF are pooled together. However, if records were split by NUTS Level 2, then the more granular structure of the Merge Table would be the following:
+
+[options="header", cols="<8,^7,<12,^7,<12,^7,>8,>8,>8,>8"]
+|===
+
+| COUNTRY | NUTS0 | MACROAREA | NUTS1 | PROVINCE      | NUTS2 | N Max   |  N Mid  | N Same | N Min 
+| Italy   | IT    | Centre    | ITE   | Ascoli Piceno | ITE34 | 152,033 |  18,257 | 10,616 |    56
+| Italy   | IT    | Centre    | ITE   | Rieti         | ITE42 | 194,072 |  23,413 | 13,653 |    69
+| Italy   | IT    | South     | ITF   | Pescara       | ITF13 | 971,442 | 116,712 | 67,895 |   391
+| Italy   | IT    | South     | ITF   | Isernia       | ITF21 | 190,964 |  23,058 | 13,124 |    80     
+| Italy   | IT    | South     | ITF   | Crotone       | ITF62 | 867,157 | 103,741 | 60,436 |   356      
+| Italy   | IT    | Islands   | ITG   | Ogliastra     | ITG2A | 124,332 |  14,819 |  8,605 |    48 
+
+|===
+
+The breakdown of the Activity table in the case of data source labelled ITF, includes sub data sources as follows:
+
+[options="header", cols="<10,^7,<12,^7,<12,^16,>10,>8,>8,>8"]
+|===
+
+| COUNTRY | NUTS0 | MACROAREA | NUTS1 | PROVINCE      | NUTS2 | N Max  |  N Mid  | N Same | N Min 
+| Italy   | IT    | South     | ITF   | Pescara       | ITF13 | 17,435 |  17,435 | 17,435 |   46
+| Italy   | IT    | South     | ITF   | Isernia       | ITF21 |  3,712 |   3,712 |  3,498 |   16     
+| Italy   | IT    | South     | ITF   | Crotone       | ITF62 | 10,620 |  10,620 | 10,561 |   48      
+
+|===
+
+It could be noted that the number of records in the Activity Table are considerably lower than the Merge Table, since the latter all repeated measures per person over time.
+
+In this manual, we will show how to use NeuBIRO to progressively amalgamate results obtained from different levels, processing individual data *only at the first step*, where the contents of data sources are available in the Merge and Activity Table. 
+
+For instance, in the first run it would be possible to process individual data from ITE34 and ITE42, then submit the following in the second step, where only aggregate data are available:
+
+[options="header", cols="<10,^7,<12,^7,<12,^16,>10,>8,>8,>8"]
+|===
+
+| COUNTRY | NUTS0 | MACROAREA | NUTS1 | PROVINCE  | NUTS2             |     N Max |  N Mid  | N Same  | N Min 
+| Italy   | IT    | Centre    | ITE   | AP,RI     | ITE34,ITE42       |   346,105 |  41,670 | 24,269  |   125
+| Italy   | IT    | South     | ITF   | PE,IS,KR  | ITF13,ITF23,ITF62 | 2,029,563 | 243,511 | 141,455 |   827
+| Italy   | IT    | Islands   | ITG   | OG        | ITG2A             |   124,332 |  14,819 |  8,605  |    48 
+
+|===
+
+Similarly, it would be possible to recursively apply NeuBIRO until the overall results are obtained for the whole network. In the working example on diabetes, we will see how it will be possible to obtain a report with the same structure of those obtained for each province, for all levels up to NUTS 0 (Italy):
+
+[options="header", cols="<10,^7,<20,^12,>10,>8,>8,>8"]
+|===
+
+| COUNTRY | NUTS0 | MACROAREA            | NUTS1          |     N Max |  N Mid  | N Same  | N Min 
+| Italy   | IT    | Centre,South,Islands | ITE,ITF,ITG    | 2,500,000 | 300,000 | 174,329 | 1,000
+
+|===
+
+The hierarchical application required to deliver a final global report is shown in the following tree diagram:
+
+.Hierarchical flow of NeuBIRO
+[ditaa, target=pile-up]
+....
+PE [ITF13]   /--------------------------------------\  +---------------+
+IS [ITF21] ->|             South [ITF]{s} cYEL      +->+               |
+KR [ITF62]   \--------------------------------------/  |               |
+                                                       |               |
+             /---------------------\  +-------------+  |               |
+             | AP [ITE34]{s} cYEL  +->|             |  |               |
+             \---------------------/  |   Centre    |  |     ITALY     |
+                                      |             +->+               |
+             /---------------------\  |    [ITE]    |  | [ITF,ITE,ITG] |
+             | RI [ITE42] {s} cYEL +->|    cGRE     |  |               |
+             \---------------------/  +-------------+  |               |
+                                                       |               |
+             /---------------------\                   |               |
+             | OG [ITG2A] {s} cYEL +------------------>+     cGRE      |
+             \---------------------/                   +---------------+              
+....
+
+In the diagram, the storage shapes highlighted in yellow indicate data sources in which NeuBIRO is used *at the first step* on top of individual data. The squares in green indicate aggregate data created by NeuBIRO in output, which can be further processed for amalgamation *at all subsequent steps* until the upper level is reached ("global" Italian report in this example).
+
+== Configuration panel
+
+The configuration of NeuBIRO includes only few fields that are needed to identify the user conditions for execution at startup: 
+
+* the *Site Code* that will be used as a tag for the output data. This can link the results of each data source to the meta-registry (not covered by the present manual). It will also assume that results of each session can be reused by the software without generating duplicates
+* the time frame (*Year*) to which the datasets will refer as a reference for each session. This will preserve the possibility that dates included in each dataset can be used to further refine the analysis.
+* the *Language* used in the outputs (currently only available in Italian and English. Restart will be needed to load the selection at startup)
+
+Once changed, this values shall be confirmed by pressing input on the disk button at the left below.
+
+All values are stored in the YML file `neubiro.yml` in the directory `neubiro/subprojects/neubiro-app`.
+
+In the lower portion, the configuration panel will show the names and number of records of the tables that have been already created and are currently stored in NeuBIRO for use, after successful import.
+
+A picture of the configuration panel is shown below.
+
+.Configuration Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_config.png[Tiger,400,400,float="right",align="center"]
+
+== Import panel
+
+All datasets submitted to NeuBIRO for statistical analysis shall be imported first, using standard formats and definitions that can be processed by R routines.
+
+The `import` module is the specific routine used to assign a unique name and format to each column loaded in the internal database. The user shall indicate the rules to properly store all variables in their correct format, using a `.specs` file including all instructions written in the standard NeuBIRO DSL.
+
+The import module reads the entire file, loading variable specifications that can contribute to one or more tables included in the H2 relational database. The H2 database is the only way to  load fields that will be used by the statistical analysis in NeuBIRO, according to the specifications provided in the `.specs` file. In this way, the data processing effort is optimised, by focusing only on those columns that are relevant for the targeted scope. Processing time and memory usage can benefit from such optimisation, which also includes data quality checks and the creation of additional fields.
+
+The entire import process is summarized in the following image:
+
+.Overview of the import process
+[ditaa, target=import-workflow]
+....
+  +-------------------+    +-------------------+    +----------------+
+  | Read import specs +--->| Acquire user vars +--->| Prepare tables +----+
+  +-------------------+    +-------------------+    +----------------+    |
+                                                                          |
+  +-----------------------------------------------------------------------+
+  |
+  |    +----------------+    +-------------------+               +---------------------+
+  +--->| Import lookups +--->|    Import data    +-------------->|    Data imported    |
+       +----------------+    +-+-----------------+               +---------------------+
+                               :               ^                 |                     |
+                               |               |                 | * fields            |
+                       +-------+               +-----+           | * calculated fields |
+                       |         for each line       |           | * lookup tables     |
+                       v                             :           | {d}                 |
+                  +-----------------+    +------------------+    +---------------------+
+                  | calculate value +--->|   import field   |
+                  +-----------------+    +------------------+
+....
+
+A typical use of the import panel can be shown by using the sample package. The sample package described in the previous section includes data that can be imported with the import specification file `import_eubirod_working_example.specs` provided under the directory: <root>/packages/sample-package/import.
+
+The file provides the code to load data for the full working example described in this guide, showing the techniques required for loading and using one master table with any nuber of associated lookup tables.
+
+The import panel of NeuBIRO requires to specify the following files: 
+
+* the *Master Data File* (currently implemented as standard .csv format) that will be used to load the Master Table described in the .specs file
+* the *Specification File* that will be used to load all files used in the NeuBIRO analysis (Master and Lookup Tables)
+
+Once selected, the specification file will populate (depending from content) the additional entry fields required for the specification of all Lookup tables.
+
+In the EUBIROD sample package, the following files will need to be specified (see above):
+
+* the *Activity Table* 
+* the *Population Table* 
+* the *Diabetic Population Table* 
+* the *Site Header* 
+* the *Site Profile* 
+* the *Geographical Codes* 
+
+The Import panel will also list the names of additional variables in the imported data.
+
+A screenshot of the Import panel is shown below:
+
+.Import Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_import_panel.png[Tiger,470,393,float="right",align="center"]
+
+Pressing the "Import" button will start the import process of the Master table and the Lookup tables (only at first run).
+An "Import lookup table" button will appear afterwards to independently repeat the import only for *all* Lookup tables.
+The results of the process will be progressively displayed on the Status Bar of the Import Panel.
+The contents of the NeuBIRO database will appear in the Configuration Panel, which will show all the datasets loaded, together with the total number of records.
+
+[WARNING]
+====
+Pressing the Import/Import lookup tables button will *completely* wipe out the previous contents of the related component in the NeuBIRO internal database (Master and/or Lookup table). 
+Use with caution!
+====
+
+In the following section, we will show how to customise a .specs file according to the specific needs of any type of application.
+
+=== Behind the stage: structure and syntax of .specs files
+
+The .specs file includes a complete specification of all data tables that will be used in NeuBIRO for statistical analysis.
+
+==== The Master block
+
+The Master table is a fundamental of all datasets used in NeuBIRO. It represents the fundamental building block for the relational database used needed to perform all statistical analyses in a project e.g. health services research or epidemiological study. 
+
+The following is an example of import specifications of a master table:
+
+[source,groovy]
+----
+master { // <1>
+  'THETABLE' { // <2>
+    context { // <3>
+      ...
+    }
+    fields { // <4>
+      ...
+    }
+    calculatedFields { // <5>
+      ...
+    }
+
+    recordCheck = { // <6>
+      ...
+    }
+
+    locf { // <7>
+      ...
+    }
+  }
+}
+----
+<1> master block
+<2> master table block
+<3> variables definition
+<4> fields definitions
+<5> calculated fields definitions
+<6> recordCheck definition
+<7> LOCF configuration
+
+[NOTE]
+====
+*Only one Master Table* can be used in a single NeuBIRO DSL `.specs` file.
+====
+
+The `master {}` block includes all elements of the primary Master Table that will be needed by NeuBIRO to populate its internal H2 database.
+
+The following elements can be included in the `master {}` block:
+
+[options="header", cols="20,10,20,55"]
+|===
+| Parameter           | Type    | Default          | Notes
+| label               | string  | false            | A general label used to describe the table
+| mandatory           | boolean | true             | Flag indicating that the table is mandatory (NB: a table in master block is *always* mandatory)
+| separatorChar       | char    | , (comma)        | Separator character used in CSV file
+| quoteChar           | char    | " (double quote) | Quoting character used in CSV file
+| escapeChar          | char    | \ (backslash)    | Escape character used in CSV file
+| context {}          | --      | --               | Block including definitions of input variables 
+| fields {}           | --      | --               | Block including definitions to create output variables 
+| calculatedFields {} | --      | --               | Block including algorithms for additional "calculated fields"
+| recordCheck = {}    | code    | --               | Block including sets of rules to create variable to check conditions on records 
+| locf {}             | --      | --               | Block including a configuration for the algorithm used for "Last Observation Carried Forward" (LOCF)
+|===
+
+The following sample code defines a master input table named `MergeTable`
+
+[source,groovy]
+----
+master {
+  'MergeTable' { // <1>
+    label = "EUBIROD Master file" // <2>
+    mandatory = true // <3>
+  }
+}
+----
+<1> name of the table when imported in the internal database
+<2> description of the table
+<3> this table is mandatory
+
+[NOTE]
+====
+A Master table is *mandatory* and must be specified by the user in order to complete the import procedure successfully.
+The mandatory flag in this case is not necessary, but is kept for consistency with other (optional) lookup tables.
+There is *only one* Master table allowed in NeuBIRO.
+====
+
+==== The Context block
+
+The Context block refers to the columns loaded from the input dataset at source (.csv format), for which further attributes may be externally set by the user. One or more columns can be included in the `context {}` block, using subsequent sub-blocks, each preceded by a string corresponding to the name of a column included in the header (first line) of the input .csv dataset. The attributes included in each sub-block can be used in calculated fields whenever the context associative array is included in the corresponding block, where also columns specified in the `fields {}` block may appear, pointing to other specific definitions used to map the original columns towards a new target dataset.
+
+[source, groovy]
+----
+context {
+ 'CUR_YEAR' {
+  type = "integer"
+  label = "Current year"
+  mandatory = true
+ }
+}
+----
+
+The following parameters can be set:
+
+[options="header", cols="20,10,10, 65"]
+|===
+| Parameters  | Type      | Default | Notes
+| type        | string    | string  | integer, decimal, string
+| label       | string    | --      | Column label
+| mandatory   | boolean   | false   | Mandatory flag
+|===
+
+
+==== The Fields block
+
+The user can specify the attributes of fields loaded from the Master .csv file used in the creation of the Master table. This table has specific characteristics that are only present in a key dataset, e.g. the definitions of clinical data for the calculation of core indicators. For this reason, *there is only one master table among all datasets that will be loaded in the H2 database*. Furthermore, only the fields specified in the `fields {}` block will be used to create the internal H2 database table.
+
+The following parameters can be set to define the fields in the `fields {}` block:
+
+[options="header", cols="20,10,10,65"]
+|===
+| Parameter   | Value     | Default | Notes
+| type        | see table | varchar | Type of field
+| size        | numeric   | 255     | Size of field for a varchar tyoe
+| format      | string    | --      | Format used to parse the field (eg. yyyy/MM/dd)
+| nameTo      | string    | --      | Name of the field in the target imported H2 database
+| valid       | code      | --      | Code flag set to TRUE if the field value is valid
+| mandatory   | boolean   | false   | Mandatory value (the entire record is discarded if missing)
+|===
+
+The `type` parameter can take one of the following values:
+
+[options="header", cols="20,80"]
+|===
+| Type     | Description
+| varchar  | alphanumeric characters
+| int      | integer value
+| smallint | small integer value
+| boolean  | boolean value
+| date     | date value
+|===
+
+An example of the fields block is shown below:
+
+[source,groovy]
+----
+ fields {
+      
+ // BIRO REF: BIRO001 - Patient ID
+  'idPaziente' { // <1>
+   type = "varchar" // <2>
+   size = 12 // <3>
+   nameTo = "PAT_ID" // <4>
+  }
+
+  // BIRO REF: BIRO002 - Data Source ID
+  'idCentro' { // <1>
+   type = "varchar" // <2>
+   size = 10 // <3>
+   nameTo = "DS_ID" // <4>
+  }
+
+  // BIRO REF: BIRO003 - Type Of Diabetes
+  'tipoDiabete' { // <1>
+   type = "smallint" // <2>
+   nameTo = "TYPE_DM" // <4>
+  }    
+
+ }
+----
+<1> the quoted name before the opening bracket is the field name corresponding to the one included in the header of the CSV file (`idCentro` in the example).
+<2> type of the field
+<3> size of the field (used only for varchar)
+<4> the name to be used in the internal database
+
+The field name must match the one used in the imported dataset.
+
+The `fields {}` block must be a sub-block of the `master {}` table block
+
+[source,groovy]
+----
+master { // <1>
+ 'MergeTable' { // <2>
+    ...
+    fields { // <3>
+    'idPaziente' { // <4> 
+      type = "varchar" 
+      size = 12 
+      nameTo = "PAT_ID" 
+     } // <4>
+    } // <3>
+   } // <2>
+} // <1>
+----
+<1> Open/close SQL format declarations for Master Table
+<2> Open/close SQL format declarations for Master Table "MergeTable"
+<3> Open/close list of fields for MergeTable
+<4> Open/close single field idPaziente 
+	
+In the example above, the program creates an internal H2 table named `MergeTable` composed of
+only *one* field named `PAT_ID` of type `varchar` and length (number of characters) equal to 10. 
+Values for the specific field 'PAT_ID' will be lodaed directly from the content of the *csv dataset*, using the contents of the column indicated corresponding to 'idPaziente' in the flat text input file.
+
+The fields will be imported in the internal database after the conversion to the specified type. 
+Fields with specific formats (eg. dates) need to be formally specified with the attribute `format=""` (eg. yyyy/MM/dd), 
+which will make sure that the field will be parsed correctly. Otherwise, the field will result into a missing value imported into the database.
+The specification of the format should be consistent with the standard SQL notation.
+
+The user can also specify an input *filter* that will allow valid data input only if certain conditions are met. This can be accomplished by using an input `valid {}` block:
+
+[source,groovy]
+----
+fields {
+  'FIELD_1' {
+    type = "int"
+
+    valid = { value -> // <1>
+      if (value < 10 && value > 20) {
+        false
+      }
+    }
+  }
+}
+----
+<1> the code block used to check if field is valid
+
+The optional valid code block receives the actual value of the field and therefore can perform all the checks needed to validate it. If the code block returns false the value of the field *will be set to missing*, otherwise it will remain as read from the csv file.
+
+A typical use of this feature allows applying a set of valid ranges for each field.
+
+==== The Calculated fields block
+A useful functionality during data import is the creation of new fields, while importing data in the SQL databases. NeuBIRO includes a specific command that can generate new columns: `calculatedFields {}` is a specific block that can be set within an open table block, at the same level of the `fields {}` block:
+
+[source,groovy]
+----
+master {
+  'MergeTable' {
+    ...
+    fields {
+      ...
+    }
+    calculatedFields {
+
+    }
+  }
+}
+----
+
+The calculatedFields block can apply to each of the columns specified in the input csv file.
+The parameters that can be set inside the `calculatedFields {}` block are the following:
+
+[options="header", cols="20,10,10, 65"]
+|===
+| Parameters  | Value     | Default | Notes
+| type        | see table | varchar | Type of field
+| size        | numeric   | 255     | Size (lenght in characters) of the field (if of type varchar)
+| persist     | boolean   | true    | Binary flag to indicate if the field must create a permanent column in the H2 table 
+| value       | code      | --      | Code block used to calculate each value in the new field
+| mandatory   | boolean   | false   | Binary flag to set the field as mandatory (if missing, the entire record is discarded from the output H2 table)
+|===
+
+Here is an example definition of a calculated field:
+
+[source,groovy]
+----
+calculatedFields {
+ 'CALC_FIELD_1' { // <1>
+  type = "varchar" // <2>
+  size = 10 // <3>
+  persist = false // <4>
+  value = { record, context -> // <5>      
+  "A VALUE" // <6>
+  }
+ }
+}
+----
+<1> the quoted name before the opening bracket is the name of the *new* calculated field
+<2> type of the field
+<3> size of the field (length in characters, used only for varchar)
+<4> flag that specifies the new field in the H2 shall persist after import
+<5> block of code that includes the algorithm for the calculation of the new field
+<6> in the Groovy language the return statement can be omitted
+
+The `persist` option is useful when we want to split the calculation of a field in several steps.
+Using the parameter `persist = false` allows creating a temporary variable that will not be saved in the H2 database, but *can be used* to calculate another field.
+
+The `value {}` block includes the formula applied to generate the calculated field. 
+The code block returns the value that will be used to populate the field, using 2 possible arguments:
+
+[options="header", cols="20,80"]
+|===
+| Arg name | Description
+| record   | associative array containing all the fields imported from the input dataset
+| context  | associative array containing values entered by the user as defined in the `context {}` block of the import specifications
+|===
+
+The `value {}` block can use any standard library provided by Groovy/Java.
+
+The following example creates a new field called `RECORD_DATE` of type `date`, which will parse the string representation of the field `BIRTH_DATE` included in the input dataset:
+
+[source,groovy]
+----
+calculatedFields {
+ 'RECORD_DATE' {
+  persist = false // <1>
+  type = "date"
+  value = { record, context ->
+  try {
+   Date.parse("yyyy-MM-dd", record['BIRTH_DATE']) // <2>
+  }
+  catch(Exception) {
+   null
+  }
+ }
+}
+----
+<1> only for internal use, field will not be included in the final table
+<2> Java/Groovy code to parse the textual date
+
+More specifications can be included as follows:
+
+[source,groovy]
+----
+calculatedFields {
+
+ 'BIRTH_DATE' { // <1>
+  persist = false
+  type = "date"
+  value = { record, context ->
+   try {
+    Date.parse("yyyy-MM-dd", record['BIRTHDAY'])
+   }
+   catch(Exception) {
+    null
+   }
+  }
+
+ 'AGE' { // <2>
+  type = "int"
+  value = { record, context -> //
+  start = record["BIRTH_DATE"]
+  recordDate = record["RECORD_DATE"]
+  yearsBetween = recordDate[Calendar.YEAR] - start[Calendar.YEAR] // <3>
+ }
+ 
+}
+----
+<1> temporary fields to store the birth date in Date format
+<2> the `AGE` field will be persisted and will contain the age in years
+<3> return value (in Groovy the last expression evaluated)
+
+Once a calculated field is created, it is inserted into the `record` associative array. In this way, its value will remain available for data processing
+by other calculated fields. Notably, the order in which the calculated fields are listed in the source code is meaningful: a field value that has not been already calculated would not be calculated.
+
+As shown above, the programmer shall first create a field named `BIRTH_DATE`, which allows calculating the next field.
+
+[TIP]
+====
+Please note that the field's name used to retrieve a value (eg. `record['FIELDNAME']`) *must be the one defined in the input file*, even if the parameter `nameTo` has been used to rename it. That is because that column will be created *only at the end* of the import process.
+====
+
+==== Lookup tables
+
+The import specifications can also define lookup tables, i.e. tables that are created in addition to the Master, so that the user can 
+import additional information directly in the internal database of NeuBiro. The column of lookup tables may include primary keys that can be used to link 
+additional columns for each observation of the Master table (e.g. person's visits to a doctor) and/or be completely disconnected (e.g. contextual information related to the 
+general population or characteristics of geographical locations included in the Master table).
+
+The Lookup tables are external to the master dataset and are imported *before* the master dataset, so that the user will be able to use the extra columns 
+for the creation of calculated fields. Lookup tables are defined inside a `lookups {}` block, using a common syntax.
+
+The structure and the format of the lookup block is the same as for the master table, with some relevant additions:
+
+* `skipAutoId` option
+* `indexes {}` block
+
+The following parameters can be used inside the `lookups {}` block:
+
+[options="header", cols="20,10,10, 65"]
+|===
+| Parameter name      | Type    | Default | Notes
+| label               | string  | false   | Table description
+| skipAutoId          | boolean | false   | Specifies if the import process should skip the creation of the `ID` field
+| mandatory           | boolean | false   | Specifies that the table is mandatory
+| fields {}           | --      | --      | Definition of fields to be imported from the dataset
+| calculatedFields {} | --      | --      | Definition of calculated fields
+| indexes {}          | --      | --      | Definition of indexes to be created for the lookup table
+|===
+
+The user can define as many lookup tables as needed in the `lookups {}` block.
+
+The following code is an example of lookup block:
+
+[source, groovy]
+----
+lookups {
+  'LOOKUP_TABLE' { // <1>
+    label = "Description"
+    mandatory = true // <2>
+    skipAutoId = true // <3>
+    fields {
+      ... // <4>
+    }
+
+    calculatedFields {
+      ... // <5>
+    }
+
+    indexes {
+      ... // <6>
+    }
+  }
+}
+----
+<1> the name of the lookup table
+<2> the table is mandatory and must be imported
+<3> do not create an ID field
+<4> definition of fields
+<5> definition of calculated fields
+<6> definition of indexes 
+
+The `skipAutoId` parameter specifies if the importer should create an ID column. If the parameter is
+not specified or assigned a value of FALSE, the resulting lookup table in the internal database will have
+an ID column with a unique value.
+
+The `indexes {}` block allows creating indexes on the lookup table that can improve the performance of the internal DBMS.
+
+The `indexes {}` block can be used with the following parameters:
+
+[options="header", cols="20,10,10, 65"]
+|===
+| Parameter name   | Type          | Default | Notes
+| primary          | boolean       | true    | Specifies that the index is primary (imply unique)
+| unique           | boolean       | false   | Specifies that the index is unique (no repeated keys allowed)
+| fields           | string list   | --      | List of field names composing the index
+|===
+
+The following code defines a lookup table for a classification or specific taxonomy (e.g. the list of codes for ICD10 diagnoses of diseases):
+
+[source, groovy]
+----
+lookups {
+  'CODES' { // <1>
+    label = "Internal codes"
+    mandatory = true // <2>
+    skipAutoId = true // <3>
+    fields {
+      'CODE' {
+        type = "varchar"
+        size = 10
+      }
+      'DESCRIPTION' {
+        type = "varchar"
+        size = 20
+      }
+    }
+
+    indexes { // <4>
+      'codeidx' { // <5>
+        primary = true // <6>
+        fields = ['CODE'] // <7>
+      }
+    }
+  }
+}
+----
+<1> name of the lookup table
+<2> the table must be imported
+<3> do not create the ID field (we will use our own index)
+<4> define indexes
+<5> name of the index is `codeidx`
+<6> index is primary
+<7> index is based on the field named `CODE`
+
+==== Using Lookup tables from calculated fields
+
+Once the lookup tables are imported, it is also possible to retrieve specific values from any of them.
+The following code shows this technique:
+
+[source, groovy, linenums]
+----
+'DECODED_FIELD' { // <1>
+    type = "varchar"
+    size = 100
+    value = { record, context ->
+        def code = record['CODE']?.trim()
+        if (code) {
+            def codes = mmg.lookup("CODES", "CODE", ["CODE", "DESCRIPTION"]) // <2>
+            if (rows) {
+                def result = codes[0].CODE
+                result
+            }
+            else {
+                null
+            }
+        }
+        else {
+            null
+        }
+    }
+}
+----
+<1> calculated field definition
+<2> use of the lookup function
+
+In this example we see a normal definition of the calculated field but, at line 7, <2> we note the usage of the `lookup()` function.
+
+The syntax of the function is:
+
+[source, groovy]
+----
+OBJ.lookup(LOOKUP_TABLE, FIELD_TO_SEARCH, LIST_OF_FIELDS_TO_RETRIEVE)
+----
+
+where:
+
+* `OBJ` is the string (literar or a variable) containing the value we want to lookup.
+* `FIELD_TO_SEARCH` is the name of the field in the lookup table in which to find the value specified in `OBJ`
+* `LIST_OF_FIELDS_TO_RETRIEVE` is the list of fields name to retrieve from the selected records of the lookup table
+
+The function returns an array, each element of the array is a map containing the fields specified in `LIST_OF_FIELDS_TO_RETRIEVE`
+
+For instance, if we want to retrieve the description associated to the code `009` from the lookup table named `CODES`
+
+[source, groovy]
+----
+def codeToSearch = "009"
+def values = codeToSearch.lookup("CODES", "CODE", ["DESCRIPTION"])
+
+def description = values[0].DESCRIPTION
+----
+
+The variable `description` will contain the decoded value.
+
+=== Data quality checks
+
+Data quality check during data import can be essential for the following reasons:
+
+* makes the data custodian aware of any pitfalls in data collection, storage or exchange formats
+* helps finding errors of data entry or in the configuration of import (e.g. wrong measurement units for numeric fields, wrong values of enumerated fields, wrong formats for date fields, etc)
+* reduces the risk of failure or unexpected results of statistical processing
+* reduces the risk of producing biased results in statistical outputs
+
+Quality checks have been implemented in NeuBiro as specifications in the import.specs file that can operate at two different levels:
+
+* field level
+* record level
+
+For the field level there are two types of checks: implicit and explicit.
+
+Implicit checks are performed by the import routine, by setting a field value to missing if not complying with the format defined in the specs file. 
+Explicit checks are instead specifically written by the user to indicate customised rules, using the `valid = {}` block in the field definition. The valid check can return a value of TRUE or FALSE. If FALSE, the field value is automatically set to missing.
+
+The record level check scans the whole record imported, including all calculed fields.
+At this level, the source code can update any field values, performing checks on any field, and eventually discarding the whole record.
+
+For instance, the record check can verify values out of range for specific fields and set their value accordingly. Alternatively, it can set the value of
+one field depending from the values of other fields on the same record.
+
+The record check can be defined as follows:
+
+[source, groovy, linenums]
+----
+master {
+  'MASTERTABLE' {
+    recordCheck = { record ->
+      def newRecord = record // <1>
+      def action = "SAVE"
+      def message
+
+      if (newRecord['DOB'] > newRecord['EPI_DATE']) {
+        action = "DISCARD" // <2>
+        message = "The record has incoherent values and will be discarded"
+      }
+
+      if (newRecord['AGE'] < 0) {
+        newRecord['AGE'] = null // <3>
+      }
+
+      return [ // <4>
+        action: action,
+        message: message,
+        record: newRecord
+      ]
+    }
+    fields {
+    }
+    calculatedFields {
+    }
+  }
+}
+----
+<1> copy the original record in a temporary variable
+<2> discard entire record if dates are wrong
+<3> set the AGE field to missing
+<4> structure of return value
+
+The return value of the `recordCheck` code is an associative array that must have the following structure:
+
+[source, groovy, linenums]
+----
+[
+  action: action,    // <1>
+  message: message,  // <2>
+  record: newRecord  // <3>
+]
+----
+<1> what to do with the record, options are SAVE or DISCARD
+<2> If DISCARD this message will be shown in the log
+<3> the record to be written
+
+The code of the `recordCheck` block will be evaluated for each imported row.
+The returned record will be written into the internal database *only after checking all mandatory
+fields*. In fact, if a mandatory field is empty, the entire record will be always discarded.
+
+The following are relevant examples of record check, included in the sample package for diabetes recordings (some variable names have been translated in english here to facilitate reading):
+
+[source, groovy, linenums]
+----
+recordCheck = { record ->
+     // <1>
+     def newRecord = record
+     def action = "SAVE"
+     def message
+
+     // <2> 
+     def today = new Date()
+     def ranges = [
+      'Weight': [5, 300],
+      'Height': [30, 300],
+      'BMI': [0.01, 100],
+      'date': [Date.parse('yyyy-MM-dd','1900-01-01'),today],
+      'dateDiagnosisDiabetes': [Date.parse('yyyy-MM-dd','1900-01-01'),today],
+      'dateBirth': [Date.parse('yyyy-MM-dd','1900-01-01'),today],
+      'ALCOHOL': [0, 60],
+      'INJECTIONS': [0, 20],
+      'CIGS_DAY': [0, 100],
+      'CREAT': [3, 1999],
+      'LDL': [0.777, 7.77],
+      'HDL': [0.01, 15],
+      'Cholesterol': [0.01, 500],
+      'Tryglicerides_post_12h_dig': [0.259, 25.9],
+      'Diastolic_Pressure': [10, 300],
+      'Systolic_Pressure': [10, 400],
+      'Glycated.Haemoglobin_HBA1C': [2.15, 25.02]
+     ]
+     ranges.each { f, r ->
+      val = newRecord[f]
+      if (val) {
+       if (val < r[0] || val > r[1]) {
+        newRecord[f] = null
+       }
+      }
+     }
+
+     // <3>
+     if (newRecord['dateBirth'] > newRecord['data']) {
+      newRecord['date'] = null
+      newRecord['dateBirth'] = null
+     } 
+      
+     if (newRecord['AGE'] < 0) {
+      newRecord['AGE'] = null
+     } 
+
+     if (record['idPatient'] == '98') {
+        action = "DISCARD"
+        message = "no #98 in the dataset!"    
+     }
+
+     if (record['idPatient'] == '344') {
+       action = "SAVE"
+       newRecord['Height'] = "300"
+     }
+
+     return [
+      action: action,    // what to do (SAVE,DISCARD)
+      message: message,  // optional message if action DISCARD
+      record: newRecord  // modified record to be written in db
+     ]
+    }     // END recordCheck 
+----
+<1> Creates a copy of the record 
+<2> Out of range check: Birth date > episode date
+<3> Coherency check
+
+
+=== Records deduplication: Last Observation Carried Forward
+
+NeuBiro also implements the algorithm "LOCF" (Last Observation Carried Forward).
+
+The algorithm can be controlled through the specification of the block `locf {}`.
+The `locf {}` block accepts the following parameters:
+
+[options="header", cols="20,10,10, 65"]
+|===
+| Parameter name | Type             | Default | Notes
+| keys           | list of strings  | --      | List of field names to be used as a unique key
+| order          | list of strings  | --      | List of fields that will be used to order the table
+| exclude        | list of strings  | --      | List of fields whose values will not be carried forward
+|===
+
+The block for LOCF is defined as follows:
+
+[source, groovy]
+----
+master {
+  'MASTERTABLE' {
+    ...
+    locf { // <1>
+      table = "MASTER_LOCF" // <2>
+      keys  = ['PAT_ID'] // <3>
+      order = ['PAT_ID', 'EPI_DATE'] // <4>
+      exclude = ['CHOL', 'HDL', 'LDL'] // <5>
+      }
+    }
+    ...
+  }
+}
+----
+<1> locf block
+<2> the name of the table that will be created after the LOCF task
+<3> aggregate by PAT_ID
+<4> Sort by PAT_ID, EPI_DATE
+<5> do not carry forward on CHOL, HDL and LDL
+
+The process will create a new table (named as defined in `table`) in the internal database.
+The table will be aggregated to just one record per unique value in the pattern defined by the key variables.
+
+Please note that fields specified in the `order` will be critical for the process to succeed.
+
+=== Browsing data in the internal database
+
+The internal database used by NeuBiro is a standard SQL database using H2 as the internal engine. 
+At startup, NeuBiro exports an endpoint that can be used to explore all tables stored into the H2 database.
+
+To start the database console we can use a customized launch script, with the following command lines (dependent from the operating system):
+
+*Launch the db console from Windows:*
+[source, shell]
+----
+cd <root>
+bin\dbconsole.bat
+----
+
+*Launch the db console from linux/OS X:*
+[source, shell]
+----
+cd <root>
+bin/dbconsole
+----
+
+Any of the above command will open the local default internet browser on the connection page of the console:
+
+.H2 database console connection window
+[align="center"]
+image::programmers/h2console.png[Tiger,400,400,float="right",align="center"]
+
+The `JDBC URL` required by the console is as follow:
+
+----
+jdbc:h2:tcp://localhost:9123/file:///FULL_PATH_TO_DB_FILE/neubiro-tcp-db
+----
+
+where `FULL_PATH_TO_DB_FILE` is the <root> installation path of NeuBiro. The fields `User Name` and `Password` must be left blank.
+
+[WARNING]
+====
+Please keep in mind that in order for this to work, NeuBiro *must* be running.
+====
+
+The console will open a nice DBMS management panel, with plenty of options to interact with the data, including running SQL queries to display the contents of the database.
+
+.H2 database console management screen
+[align="center"]
+image::neubiro_h2_console.png[Tiger,400,400,float="right",align="center"]
+
+The `JDBC URL` required by the console is as follow:
+
+
+
+[TIP]
+====
+For more information about the db console please refer to the H2 database documentation
+at the following url: http://www.h2database.com/html/tutorial.html
+====
+
+== Analysis panel
+
+The Analysis panel allows running the statistical section of NeuBIRO according to the specifications provided by the user. 
+
+NeuBiro processes data according to the execution scheme shown below, taking care of all dependencies between a series of statistical routines written in the R language (modules).
+
+In fact, *for each module* included in the Analysis, the program performs the following tasks:
+
+* _pre-processes_ data according to the specification in the module spec (using Groovy and H2)
+* _invokes_ R to write outputs (using xml and other artifacts eg images that will be included in pdf documents by Docbook)
+* _post-processes_ data to verify the outputs that have been created
+
+After the execution of all consecutive modules, the partial outputs are merged together to create the final report.
+
+.Flow of execution of the statistical analysis in NeuBIRO
+[ditaa, target=processing-workflow, format=png]
+....
+  +------------------+
+  | Define execution |
+  |       graph      +
+  +---------+--------+
+            |
+            v
+  +-------------------+     +--------------+    +---------------------------+
+  | Read module specs +---->| Prepare data +--->| Execute statistical code  +---*-----\
+  +---------+---------+     +--------------+    +---------------------------+   |     |
+            ^                                   |                           |   |     |
+            |                                   | * fork R process          |   |     |
+            |                                   | * execute indicator.r     |   |     |
+            |                                   | * save partial data       |   |     |
+            |                                   +---------------------------+   |     |
+            |                                                                   |     |
+            |                         for each module                           |     |
+            \-------------------------------------------------------------------/     |
+                                                                                      |
+                 /--------------------------------------------------------------------/
+                 |
+                 |     +-------------------+     +------------------------+
+                 \---->| Aggregate partial +---->|   Generate PDF report  |
+                       |      results      |     +------------------------+
+                       +-------------------+     |                        |
+                       |                   |     | * use DocBook template |
+                       | * collect         |     | {d}                    |
+                       | * merge           |     +------------------------+
+                       +-------------------+
+....
+
+
+Through the graphical interface, the user can directly determine the sequential flow of the analysis by selecting specific sets of key parameters, including the following: 
+
+* the *`Engine type`*, indicating whether the statistical routines should tap into the individual data stored in the H2 database, created according to the specifications provided in the .specs file (*"Local"*), or use aggregate data previously produced by NeuBIRO (*"Central"*), using the column names found in each table included in a list of files (appearing in the lower portion) under *`Filename`*.
+
+* the *`Indicators folder`*, indicating the location of statistical routines (modules) that must be included in the analysis
+
+* the *`Work folder`*, indicating the root directory in which all consecutive outputs will be saved
+
+* the *`Select unit`*, allowing to filter data, based on the values of one column in the input data. One or more target values can be specified in the additional text field on the right. Using the wildcard character '*' in this entry will create multiple reports, one for each unique value found for the column specified in the input field.
+
+Additional parameters include:
+
+* *`Language`* for the language used in writing the report
+
+* *`Highlights`* allowing to choose one column whose values will identify subgroups to be variously highlighted (e.g. using different colours)
+
+* *`Reference`* to specify a benchmark that could be either internal (average from the master table), or external (using an external file that needs to be specified)
+
+A typical use of the analysis panel can be shown by running the sample package. 
+
+The sample package includes many indicators that are provided under the directory: <root>/packages/sample-package/indicators.
+
+A basic setup of the statistical analysis requires at least to specify the following: 
+
+* *Indicators folder*: root of the indicators folder in the sample package. The structure of this directory will be explained in the following subsection. 
+* *Work folder*: destination root of all reports to be created in the open session (after running the chosen indicators). 
+
+In the following example (see figure below), consistently with the scope of the EUBIROD sample package, the following indicators will be specified:
+
+* the *BIRO Report 2017* 
+
+.Analysis Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_analysis_panel.png[Tiger,469,397.5,float="right",align="center"]
+
+Pressing the "Refresh" button will reload the indicators, in case the folder has been changed recently.
+Pressing the "Run Analysis" button will start the import process. 
+The results of the process will be progressively displayed on the Status Bar of the Analysis Panel.
+
+[WARNING]
+====
+Pressing the Run Analysis button will flush out *all contents* of the work folder. 
+Use with caution!
+====
+
+The sample statistical package includes the following modules, specifically developed to show the basic techniques to deliver frequency tables:
+
+[options="header", cols="20, 80"]
+|===
+
+| Module | Description
+| setup  | Setup module, not shown on the analysis window, performs initializations for the R environment
+| mod1   | Sample module that produces a graph and show the
+| mod2   | Sample module to show how to use data produced by another module
+| mod3   | Sample module to show how to create zip compressed files
+
+|===
+
+A sample report template is also provided.
+
+In the following section, we will show how to customise your indicator files using your data.
+
+=== Behind the stage: statistical modules
+
+The contents of the statistical package are determined by the files included in sub-directories of the main `Indicators folder`, according to the following tree structure:
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
+<root>
++-- Indicators Folder <1>
+    +-- <module_1>
+    |   +-- indicator.specs <2>
+    |   `-- indicator.r <3>
+    |   `-- implementation.r <4>
+    +-- <module_2>
+    |   +-- indicator.specs
+    |   `-- indicator.r <3>
+    |   `-- implementation.r <4>
+    +-- ...
+    +-- <module_n>
+    |   +-- indicator.specs
+    |   `-- indicator.r <3>
+    |   `-- implementation.r <4>
+    +-- report <5>
+    |   +-- master.xml <6>
+    |   +-- chapter.xml <7>
+    |   +-- master.xsl <8>
+    |   `-- resources <9>
+    |       `-- logo.png
+    `-- selectUnit.specs <10>
+----
+<1> modules root
+<2> module descriptor
+<3> entry point for the module code
+<4> further instructions of the module code
+<5> final report descriptor's root
+<6> master file for final report
+<7> master file for each chapther of the final report
+<8> master xsl file for final report formatting
+<9> additional resources
+<10> select unit specs
+
+The "indicators" selected by the user will be determined by the contents of subdirectories of the `/indicators` folder, each including a mandatory file named `indicator.specs`. The specs file includes relevant specifications for each indicator, e.g. the ID, one or more H2 tables submitted to SQL pre-processing, any output files that will be produced, and report formatting. In addition, the `.specs` file can also point to other indicators that can be run prior to its execution.
+
+The indicator list included in the lower portion of the "Analysis" panel will be populated using the IDs provided in the `.specs` file, listed in alphabetical order. 
+
+Each indicator file can be complemented by one or more files written in the `R language`, whose aim is to deliver the target outputs using ad hoc statistical routines included in the package (e.g. frequency tables, graphical outputs or regression models). 
+
+The main calls are normally included in a distinct file named `implementation.R`, which can make use of complex functions (normally included in the file tools.R, see below).
+
+In addition to the `Indicators folder`, the statistical package can use further import/formatting specifications and R functions including in files available at the following locations: 
+
+* `/import`: import specifications included in the `.specs` files
+* `/commons`: repository of common statistical functions
+**  `options.R`: system options for R BIRO analysis (e.g. variables for case-mix adjustment, etc)
+**  `tools.R`: set of statistical functions written in R
+**  `docbook.R`: set of R functions for docbook formatting
+* `/report`: files for report formatting
+*** `master.xml`
+*** `chapter.xml`
+*** `master.xsl`
+*** `/resources`
+**** `logo.png`
+
+=== Module .specs file (descriptor)
+
+A module descriptor describes the pre-processing tasks needed to invoke the associated statistical code written in R. NeuBiro will use such information
+to prepare all the elements required by the statistical code.
+
+The goal of this approach is that each module can concentrate only a small part of the computation for the specific need of that indictor, which can help optimising code and resources. Since each module can depend from other modules that have been preceding other tasks, an hidden module can produce common artifacts that can be reused by others.
+
+A module descriptor shall be included in a file named `indicator.specs`, which must contain only one `indicator {}` block.
+
+The components required to define a single module are the following:
+
+[options="header", cols="20,10,10,65"]
+|===
+| Parameter name   | Type          | Default | Notes
+| id               | string        | --      | Unique id of the module
+| description      | string        | --      | Module description
+| dependsOn        | string's list | --      | List of dependent modules
+| hidden           | boolean       | false   | Flag to indicate that the module is internal (not shown to the user on the interface)
+| excludeReport    | boolean       | false   | Flag to indicate that module will not contribute directly to the final report
+| input {}         | --            | --      | Rules for the creation of the input file used by R
+| output {}        | --            | --      | Rules to check the outputs produced by R
+|===
+
+The following is an example of a module descriptor:
+
+[source, groovy]
+----
+indicator {
+  id = 'module_1' // <1>
+  description = "Description of the statistical module" // <2>
+  dependsOn = ['setup'] // <3>
+  hidden = false // <4>
+  excludeReport = false // <5>
+  input { // <6>
+    ...
+  }
+
+  output { // <7>
+    ...
+  }
+}
+----
+<1> module id
+<2> module description
+<3> list of dependent modules (to be executed before this one)
+<4> hidden flag, if true the module will not be shown in the list of modules
+<5> exclude flag, if true the module will not participate to the creation of the final report
+<6> input {} block to describe the input used by R
+<7> output {} block to describe the output of R
+
+As stated above, the above descriptors define which data must be prepared for use in R. The datasets need to be csv files, whose content and names are specified in the `input {}` block.
+
+The available parameters for the elements of the `input {}` are the following:
+
+[options="header", cols="20,10,10, 65"]
+|===
+| Parameter name   | Type            | Default | Notes
+| table            | string          | --      | Name of the master table
+| fields           | list of strings | --      | List of fields from the master table
+| groups           | list of strings | --      | List of fields from the master table for grouping
+| criteria         | string          | --      | 
+| sql              | string          | --      | Full SQL statement with DML instructions
+| sqlDdl           | string          | --      | Full SQL statement with DDL instructions 
+| order            | list of strings | --      | List of fields from the master table for ordering
+| file             | string          | --      | Name of the output file
+|===
+
+For instance, to create automatically an aggregate table from the "MAIN" table, which includes counts of the number of records with the same patterns of SEX and AGE_RANGE, and save these results in a csv file named `input.csv`, we can use the following structure:
+
+[source, groovy]
+----
+indicator {
+  ...
+  input {
+    table = "MAIN" // <1>
+
+    fields = [ // <2>
+      'SEX', 'AGE_RANGE',
+      'count(*) as COUNT'
+    ]
+
+    groups = [ // <3>
+      'SEX', 'AGE_RANGE'
+    ]
+
+    file = "input.csv" // <4>
+  }
+  ...
+}
+----
+<1> master table name
+<2> fields to select
+<3> fields for group by
+<4> output filename
+
+The code above will process the data as follows:
+
+. NeuBiro will execute an SQL extraction of records from the table named `MAIN`, using the specifications provided in the parameters `fields` and `groups`
+. NeuBiro will save the selected records in a csv file named `input.csv` (named after the statistical analysis that will be run on its contents)
+
+In practice, the input block uses a compact syntax to execute the following SQL statement:
+
+[source, sql]
+----
+SELECT SEX, AGE_RANGE, count(*) AS COUNT FROM MAIN GROUP BY SEX, AGE_RANGE
+----
+
+The contents of the resulting input.csv file will be:
+
+[source,csv]
+----
+SEX,AGE_RANGE,COUNT
+M,1,150
+M,2,234
+F,1,412
+F,2,223
+...
+----
+
+The `input {}` block can also accept multiple files to be created, as shown here:
+
+[source, groovy]
+----
+indicator {
+  ...
+  input {
+    'FIRST' {
+      table = "MAIN"
+      fields = [ ... ]
+      groups = [ ... ]
+      file = "input_one.csv"
+    }
+
+    'SECOND' {
+      table = "MAIN"
+      fields = [ ... ]
+      groups = [ ... ]
+      file = "input_two.csv"
+    }
+  }
+  ...
+}
+----
+
+
+The  `output {}` block may be used to describe and verify the output from the R code.
+
+In the following snippet we request NeuBiro to check for the presence of a file named `report.xml`:
+
+[source, groovy]
+----
+indicator {
+  ...
+  output {
+    files = ["report.xml"] // <1>
+  }
+  ...
+}
+----
+<1> list of the files expected at the end of the R code execution
+
+If not all files specified within the `files` parameters are produced at the end of the process, NeuBIRO releases an error and halts execution.
+
+=== The select unit specifications
+
+The specifications included in the select unit allow filtering records accessible as input by the subsequent statistical routines.
+
+[source, groovy]
+----
+variables {
+  'AGE_RANGE' { // <1>
+    table = "master" // <2>
+    label = "Age range" // <3>
+    type = "string" // <4>
+  }
+}
+----
+<1> field targeted for the extraction of unique values
+<2> table containing the field
+<3> label (currently not implemented)
+<4> type of field
+
+=== The statistical code of each module
+
+The statistical code is in charge of all the statistical calculations. Outputs consist mainly of xml files containing
+sections of the final report. The statistical code receives input data specified by the module descriptor (see above) 
+and performs all the statistical processing needed by the module. It always produces a mandatory file named `report.xml`, including outputs that will be used by the internal DocBook to produce the final merged report.
+
+The following code presents an example of the statistical code for each module:
+
+*Indicator.r file*
+[source, r]
+----
+# =====================================================
+# Entry point
+#
+# baseDir = Root directory for all indicators
+# workDir = Work directory for this indicator
+#
+# =====================================================
+
+data <- read.table(paste(workDir, "/module_1/input.csv", sep=""), header=TRUE, sep=",", colClasses="character") # <1>
+
+# call statistical function # <2>
+
+# write xml file for report # <3>
+
+rm(list=ls(all=TRUE)) # <4>
+----
+<1> load the data to be processed
+<2> perform statistical processing
+<3> write partial xml code for the final report
+<4> clean up R environment
+
+NeuBiro starts processing using the .specs file for pre-processing data, then it invokes R, checking for the existence of a file named `indicator.r`.
+The file is run, with the following parameters set automatically according to the values previously specified:
+* `baseDir` - root directory of the statistical package
+* `workDir` - working directory in which all outputs of the module will be saved
+
+A statistical module can include complex calls to multiple routines. For this reason, it is highly recommended to split calls across separate files, including functions that can be repeatedly used to make the organization of the code more efficient. Here is an example on how to best organize the code:
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
+<ROOT>
+`-- indicators // <1>
+  +-- commons
+  | +-- tools.r // <2>
+  | `-- libs2.r // <2>
+  +-- indicator_1
+  | +-- indicator.specs
+  | +-- indicator.r // <3>
+  | `-- implementation.r // <4>
+  `-- ...
+----
+<1> indicators (modules) root
+<2> common files shared by all modules
+<3> entry point for the indicator code
+<4> implementation of the indicator code
+
+In this way, the R code is divided into multiple files where the source is organized according to their possible use and re-use, applying the "DRY" principle ("Don't Repeat Yourself").
+
+Here we see an example of an R "entry point" that loads the actual implementation of the module (file `implementation.r`),  executing its main function `indicator1()`.
+
+.indicator.r file
+[source, r]
+----
+# =====================================================
+# Entry point
+#
+# baseDir = Root directory for all indicators
+# workDir = Work directory for this indicator
+#
+# =====================================================
+
+source(paste(baseDir, "/commons/tools.r", sep="")) # <1>
+source(paste(baseDir, "/module_1/implementation.r", sep="")) # <2>
+
+indicator1() # <3>
+
+rm(list=ls(all=TRUE)) # <4>
+----
+<1> load common functions
+<2> load module implementation
+<3> executes the implementation code
+<4> clean up R environment
+
+The implementation of the module code can be the following:
+
+.implementation.r file
+[source, r]
+----
+indicator1 <- function() {
+
+  # Set the working directory
+  setwd(workDir) # <1>
+
+  # Load data
+  table1 <- read.table(paste(workDir, "/input.csv", sep=""), header=TRUE, sep=",") # <2>
+
+  # ... do something with the loaded data ...
+
+  # Write report.xml file
+  writeTable(file="report.xml", # <3>
+    data=table1,
+    append=append,
+    vars=c("sex","n","perc"),
+    headlabs=headlabs,
+    headwidt=c("260pt","60pt","60pt"),
+    colalign=c("left","right","right"),
+    headalign=c("left","center","center"),
+    varcolalign=c("align_1","align_2","align_3"),
+    footlabs=footlabs,
+    footnote=footnote,
+    title=title,
+    section=section,
+    graph=NULL)
+}
+----
+<1> set the working directory
+<2> load the data from the input.csv prepared by the module descriptor
+<3> write the report.xml file using a custom function
+
+The workDir and baseDir paths passed to each module allow retrieving all output produced by other modules. In this way, they will be reused, so that the calculations for complex tasks can be efficiently performed.
+
+=== Parameters passed by NeuBIRO to the R code
+
+The NeuBIRO interface submits the following additional parameters to R for statistical calculations, based on the user's choice:
+
+[options="header", cols="30,70"]
+|===
+
+| Parameter       | Description
+
+| baseDir         | Base directory
+| workDir         | Work directory
+| language        | Language
+| operator        | Code of the centre producing the report
+| year            | Time reference for the produced report
+| engine_type     | Type of processing: individual (local) or aggregate data (central)
+| reference       | Reference group for benchmarks (internal average or external file)
+| reference_files | List of reference files for external reference
+| input_files     | List of aggregate input files for meta-aggregation
+| funnel_group    | Column specifying stratified statistical analysis
+| select_unit     | Filter for specific observations to be submitted to R
+
+|===
+
+All the above parameters may or may not considered by the statistical code, based upon its actual contents.
+
+=== Zip compressed files for flexible file exchange
+
+Compressed files can be useful to create data packages that can be sent to an external repository, so that research networks can share their contents in various ways. 
+The creation of these bundles can be challenging when working in a multi platform environment. Moreover, R libraries can be different over heterogeneous platforms, leading to compatibility problems.
+
+To overcome these problems NeuBiro provides specific support to create files that are independent from the underlying
+operating system, appropriately referenced through the use of targeted R code.
+This allows generating "Statistical Objects" that include all statistical information from the generated reports. In this way, NeuBIRO can save data that can be reused at the upper level of aggregation, e.g. in a "Central" Engine Type analysis. 
+
+To create a zip file, a dedicated R indicator code will create a simple descriptor file including all references for all files included in the
+compressed archive. The _descriptor file_ will comply with tha standard YAML format. NeuBiro will take care of the creation of the .zip file.
+
+[TIP]
+====
+The descriptor's filename *must* have the `.zip.yml` extension to be recognized as a zip descriptor.
+====
+
+Here is a sample zip YAML descriptor file:
+
+*Example.zip.yml*:
+[source, yaml]
+----
+# ZIP FILE DESCRIPTOR
+file: output.zip # <1>
+files:
+  - file_one.csv # <2>
+  - file_two.csv # <2>
+  - file_three.csv|file_three_renamed.csv # <3>
+cleanup: true # <4>
+----
+<1> name of the final zip file
+<2> list of files that will compose the final zip archive
+<3> specifies a new name for the file in the zip archive
+<4> cleanup flag, if true NeuBiro will delete the intermediary files leaving only the generate zip file
+
+Here we show how to customise simple routines for the specific needs of any project.
+The following is a simple function written in R to create the YAML file:
+
+[source, r]
+----
+writeZipDescriptorFor <- function(zipfilename, fileslist, cleanup=TRUE) {
+  descfilename <- paste(zipfilename, ".yml", sep="")
+  fileConn <- file(descfilename)
+  writeLines("# ZIP FILE DESCRIPTOR", fileConn)
+  close(fileConn)
+  fileConn <- file(descfilename, open="at")
+  writeLines(paste('file: ', zipfilename, sep=""), fileConn)
+  writeLines(paste('cleanup: ', ifelse(cleanup, 'true', 'false'), sep=""), fileConn)
+  writeLines('files:', fileConn)
+  for (i in 1:length(fileslist)) {
+    writeLines(paste('- ', fileslist[i], sep=""), fileConn)
+  }
+  close(fileConn)
+}
+----
+
+The function can be placed in the shared library file (eg `tools.r` in the sample package). In this way, it will be available to each indicator, hence reusable between them.
+
+The following code demonstrates how to use the above function to create two zip files:
+
+[source, r, linenumbers]
+----
+main <- function() {
+  # Creates some example text files
+  fileslist <- c("descriptor-local.yml", "one.txt", "two.txt", "three.txt", "descriptor-central.yml", "four.txt", "five.txt")
+  for (i in 1:length(fileslist)) {
+    createTestFile(fileslist[i])
+  }
+
+  # Creates a file named test1.zip
+  fileslist <- c("descriptor-local.yml|descriptor.yml", "one.txt", "two.txt", "three.txt") # <1>
+  writeZipDescriptorFor("test1.zip", fileslist, TRUE)
+
+  # Creates a file named test2.zip
+  fileslist <- c("descriptor-central.yml|descriptor.yml", "four.txt", "five.txt", "notpresent.csv", FALSE) # <2>
+  writeZipDescriptorFor("test2.zip", fileslist)
+}
+
+main()
+----
+<1> rename the source file
+<2> do not delete the composing files
+
+As a result, the previous code will create the following descriptors:
+
+*test1.zip.yml*
+[source, yaml, ]
+----
+file: test1.zip
+files:
+- descriptor-local.yml|descriptor.yml # <1>
+- one.txt
+- two.txt
+- three.txt
+cleanup: true
+----
+<1> rename descriptor-local.yml into descriptor.yml
+
+*test2.zip.yml*
+[source, yaml, ]
+----
+file: test2.zip
+files:
+- descriptor-central.yml|descriptor.yml # <1>
+- four.txt
+- five.txt
+- notpresent.csv # <2>
+cleanup: false
+----
+<1> rename descriptor-central.yml into descriptor.yml
+<2> missing file
+
+[TIP]
+====
+Please note how the source files are renamed using the following notation:
+[source, yaml]
+----
+- original.ext|renamed.ext
+----
+====
+
+If a file is missing, a log message will be reported to the user and the resulting zip file will not contain the missing file.
+
+NeuBiro, after the execution of the R interpreter, will regain control and check for the existence of a descriptor file like the one
+specified above it creates the compressed archive, which can be used seamlessly across platforms.
+
+The content of the zip files will be as follows:
+
+*test1.zip*
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
+test1.zip
++-- descriptor.yml
++-- one.txt
++-- two.txt
+`-- three.txt
+----
+
+and
+
+*test2.zip*
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
+
+test2.zip
++-- descriptor.yml
++-- four.txt
+`-- five.txt
+----
+
+=== The report template
+
+The final report is generated as *.html* and *.pdf* using DocBook
+
+[source,groovy]
+----
+| ...
++-- report // <1>
+| `-- master.xml // <2>
+| `-- chapter.xml // <3>
+| `-- master.xsl // <4> 
++-- resources // <5>
+| `-- logo.png // <4> 
+----
+<1> root of the descriptor files of the final report 
+<2> master file descriptor of the final report
+<3> master file descriptor for each chapter of the final report
+<4> master xsl file for the formatting of the final report
+<5> additional resources needed by the report template
+
+=== Automating multiple reports with the Selector parameter
+
+This section will show how to automate the production of multiple reports for each level of a target variable. This will be possible by using a "Local" Engine in the Analysis panel, adding a Selector variable with wildcard character "*" in the additional text field located on the right. This configuration will create a different report for each level of the Selector column in different subdirectories of the Work folder, where the html/pdf outputs will be located in the directory "report". The same subdirectories will also include, in each indicator-specific sub-directory, the zip file including all the aggregate results (statistical objects) in compressed format. If the same analysis is conducted with a set of values (or just one), only reports for the specified categories will be saved in the work root.
+
+
+The following shows how to launch this particular configuration:
+
+.Selector with Local Engine in the NeuBIRO main interface
+[align="center"]
+image::neubiro_analysis_selector.png[Tiger,400,400,float="right",align="center"]
+
+=== Pooled analysis using the "Central" Engine
+
+The separate statistical objects produced at each run of NeuBIRO (even with the Selector variable) can be included in the Analysis panel to deliver a pooled analysis across the federated network. This is made possible by setting the Engine Type to "Central". This type of engine is very special, as it works only on aggregate data. In this way, NeuBIRO bypasses the statistical descriptor files indicator.specs completely, and will work only on aggregate data. 
+
+Therefore, only the indicator.r files and sourced functions will be used by the Engine(the source code of R files may be organized into local and central components).
+
+The following shows how to use the Analysis panel with a "Central" Engine Type:
+
+.Central Engine in the NeuBIRO main interface
+[align="center"]
+image::neubiro_central.png[Tiger,393,404,float="right",align="center"]
+
+The report with the results obtained using the Central Engine from the compilation of the three sub-levels, is identical to the one produced for the whole dataset with the Local Engine.
+
+An example of a table obtained with the Local Engine on the entire ITF dataset is the following:
+.Local Engine in the NeuBIRO main interface for the ITF dataset:
+[align="center"]
+image::neubiro_local_ITF.png[Tiger,393,404,float="right",align="center"]
+
+The result is absolutely identical to the one produced by the Central Engine on the different NUTS level composing the ITF dataset
+
+An example of how to get the final results of the entire BIRO process presented in Figure 2, delivered using the Central Engine, is shown below.
+
+.Central Engine succeeded in the NeuBIRO main interface
+[align="center"]
+image::neubiro_central_final_panel.png[Tiger,400,400,float="right",align="center"]
+
+The results can be found in the report located in the indicated IT subdirectory.
+
+Here is the index of the report:
+
+.Central Engine succeeded in the NeuBIRO main interface
+[align="center"]
+image::neubiro_central_final_report_index.png[Tiger,400,400,float="right",align="center"]
+
+Here is the final table for the IT NUTS level:
+
+.Central Engine succeeded in the NeuBIRO main interface
+[align="center"]
+image::neubiro_central_final_report.png[Tiger,400,400,float="right",align="center"]
+
+== Transfer panel
+
+The transfer panel is a simple tool designed to send the statistical objects towards a central server, using user credentials. 
+Although currently operating on an ftp protocol, the tool has been integrated with a web service that can offer more efficient and stable management in a secure environment.
+
+A picture of the transfer panel is shown below.
+
+.Transfer Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_transfer.png[Tiger,400,400,float="right",align="center"]
+
+== Log panel
+
+The log panel will include information sent by the execution of any panel in NeuBIRO. The panel will include information on loaded datasets, contents of variables and number of observations, portions of code executed and closing messages of correct execution.
+
+A picture of the log panel is shown below.
+
+.Log Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_log_import.png[Tiger,400,400,float="right",align="center"]
+
+== Hacking NeuBiro
+
+This section describes the organization of the source code and provides information needed to work on the code base.
+
+=== Accessing the source code
+
+All the source code for NeuBiro is available on Gitlab.
+
+The version control system used is GIT (http://git-scm.com) and all the source code can be cloned with:
+
+`git clone https://to.be.defined/neubiro`
+
+after cloning the repository, the working copy will have a layout similar to:
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
+<ROOT>
++-- src // <1>
++-- subprojects // <2>
+| +-- neubiro-app // <3>
+| +-- neubiro-manual // <4>
+| `-- neubiro-sample-package // <5>
++-- build.gradle // <6>
++-- settings.gradle // <7>
++-- gradlew.bat // <8>
+`-- gradlew // <8>
+----
+<1> sources for installer
+<2> subprojects root
+<3> the java application sources
+<4> the documentation
+<5> sample statistical package
+<6> main build file
+<7> main settings for the gradle build
+<8> gradle wrappers for windows and unix
+
+=== Building NeuBiro
+
+NeuBiro uses Gradle (http://gradle.org) as the build tool of choice. Thanks to the Gradle wrapper, there is no need
+to install the standalone gradle distribution. It is sufficient to use gradlew (or gradlew.bat for windows) to run and/or compile the software.
+
+For example, to run NeuBiro in development mode we can issue the following command:
+
+[source, bash]
+----
+./gradlew run
+----
+
+Other useful tasks for project completion are summarized in the following table:
+
+[options="header", cols="20,80"]
+|===
+
+| Task | Description
+
+| run       | Run NeuBiro in development mode
+| docs      | Builds the documentation in PDF and HTML formats
+| installer | Creates the installer
+| dist      | Creates all the files composing the distribution (eg software, docs and samples)
+
+|===
+
+The source code for NeuBiro is located at the following path: `<ROOT>/subprojects/newbiro-app`.
+
+=== Documentation
+
+The documentation of the project is written using AsciiDoctor (http://asciidoctor.org).
+
+All source code for the documentation of NeuBiro, including a "Users's Guide" and "Programmer's Guide",
+is located at the following path: `<ROOT>/subprojects/newbiro-manual`.
+
+include::_libraries.adoc[]
+include::_acknowledgements.adoc[]
+
+[bibliography]
+== References
+
+* [[[carincibiro,1]]] Carinci F, Gualdi S, Di Iorio CT, Cunningham S, Massi Benedetti M on behalf of the EUBIROD Network, Making use of routine health data for National, Regional and Provider level governance: principles and application of the BIRO approach (“Best Information through Regional Outcomes”), Submitted 2021.
+
+* [[[cunninghambiro,2]]] Cunningham SG, Carinci F, Brillante M, Leese GP, McAlpine RR, Azzopardi J, Beck P, Bratina N, Boucquet V, Doggen K, Jarosz-Chobot PK, Jecht M, Lindblad U, Moulton T, Metelko Ž, Nagy A, Olympios G, Pruna S, Skeie S, Storms F, Di Iorio CT and Massi Benedetti M, Defining a European diabetes data dictionary for clinical audit and healthcare delivery: core standards of the EUBIROD project, Methods of Information in Medicine,  2015 Dec 15;55(2).
+
+* [[[carinciregistries,3]]] Carinci F, Štotl I, Cunningham SG, Poljicanin T, Pristas I, Traynor V, Olympios G, Scoutellas V, Azzopardi J, Doggen K, Sandor J, Adany R, Løvaas KF, Jarosz-Chobot P, Polanska J, Pruna S, de Lusignan S, Monesi M, Di Bartolo P, Scheidt-Nave C, C. Heidemann, Zucker I, Maurina A, Lepiksone J, Rossing P, Arffman M, Keskimäki I, Gudbjornsdottir S,  Di Iorio CT, Dupont E, De Sabata S, Klazinga N and Massi Benedetti M, Making use of comparable health data to improve quality of care and outcomes in diabetes: the EUBIROD review of diabetes registries and data sources in Europe, Front Clin Diabetes Healthc, 11 Oct 2021. Available at: https://www.frontiersin.org/articles/10.3389/fcdhc.2021.744516/pdf.

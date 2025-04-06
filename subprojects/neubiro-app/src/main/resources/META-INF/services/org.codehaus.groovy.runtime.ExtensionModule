@@ -1,0 +1,4 @@
+moduleName=griffon-csv
+moduleVersion=1.0.0
+extensionClasses=extensions.csv.CSVReaderUtils
+staticExtensionClasses=

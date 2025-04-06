@@ -1,0 +1,31 @@
+== Software libraries
+
+NeuBiro makes use of the libraries offered by the following robust open source projects: 
+  
+[options="header", cols="25,45,30"]
+|===
+| Project 
+| Description 
+| URL
+
+| The Groovy language
+| a multi-faceted language for the Java platform
+| http://groovy-lang.org
+
+| The Griffon framework 
+| a desktop application development platform for the JVM
+| http://griffon-framework.org
+
+| H2 Database Engine
+| embeddable relational database engine
+| http://www.h2database.com
+
+| DocBook
+| a semantic markup language for technical documentation
+| http://docbook.org
+
+| AsciiDoctor
+| a fast text processor and publishing toolchain
+| http://asciidoctor.org
+
+|===

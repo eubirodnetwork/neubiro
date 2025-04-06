@@ -1,0 +1,4 @@
+YEAR,COUNTRY,DS_TYPE,DS_NAME,DS_DENOM,DS_AREA,DS_WEBSITE,DS_ADDRESS_1,DS_ADDRESS_2,DS_ADDRESS_3,DS_ADDRESS_4,DS_POST_CODE,DS_C_CONTACT,DS_C_EMAIL,DS_T_CONTACT,DS_T_EMAIL,SUB_DS_ID
+2012,ITALY,4,Pescara,371175,[European Union].[Italy].[SUD].[Abruzzo].[Pescara],www.diabete.pescara.it,Pescara,Via Strada 1,,,65100,contact_name,contact@diabete.pescara.it,t_contact_name,t_contact@diabete.pescara.it,ITF13
+2012,ITALY,4,Isernia,83896,[European Union].[Italy].[SUD].[Molise].[Isernia],www.diabete.isernia.it,Isernia,Via Strada 1,,,86170,contact_name,contact@diabete.isernia.it,t_contact_name,t_contact@diabete.isernia.it,ITF21
+2012,ITALY,4,Crotone,159053,[European Union].[Italy].[SUD].[Calabria].[Crotone],www.diabete.crotone.it,Crotone,Via Strada 1,,,63900,contact_name,contact@diabete.fermo.it,t_contact_name,t_contact@diabete.fermo.it,ITF62

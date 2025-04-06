@@ -1,0 +1,2 @@
+YEAR,COUNTRY,DS_TYPE,DS_NAME,DS_DENOM,DS_AREA,DS_WEBSITE,DS_ADDRESS_1,DS_ADDRESS_2,DS_ADDRESS_3,DS_ADDRESS_4,DS_POST_CODE,DS_C_CONTACT,DS_C_EMAIL,DS_T_CONTACT,DS_T_EMAIL,SUB_DS_ID
+2012,ITALY,4,Rieti,145490,[European Union].[Italy].[CENTRO].[Umbria].[Rieti],www.diabete.rieti.it,Rieti,Via Strada 1,,,2100,contact_name,contact@diabete.rieti.it,t_contact_name,t_contact@diabete.rieti.it,ITE42

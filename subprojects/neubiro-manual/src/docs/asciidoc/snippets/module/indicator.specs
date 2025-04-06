@@ -1,0 +1,58 @@
+// tag::content[]
+indicator {
+  id = 'module_1_1'
+
+  description = "Create data file example"
+
+  dependsOn = ['setup'] // <1>
+
+  hidden = true
+  excludeReport = true
+
+  input { // <2>
+    table = "MAIN"
+
+    fields = [ // <3>
+      'DIST_MMG', 'MMG',
+      'SEX', 'AGE_RANGE',
+      'HYPERTE', 'DIAB',
+      'count(*) as COUNT'
+    ]
+
+    groups = [
+      'DIST_MMG', 'MMG',
+      'SEX', 'AGE_RANGE',
+      'HYPERTE','DIAB'
+    ]
+
+    file = "input.csv" // <4>
+  }
+
+  output { // <5>
+
+    /*
+    // Tutto spostato in pippo.specs
+    table {
+      file = "output.csv"
+
+      name = "MODULE_1"
+
+      fields {
+        'DIST_MMG' {
+          type = "varchar"
+          size = 10
+        }
+        'SEX' {
+          type = "varchar"
+          size = 10
+        }
+      }
+    }
+    */
+
+    files = ["file1.xml", "file2.zip"]
+
+    specs = "pippo.specs"
+  }
+}
+// end::content[]

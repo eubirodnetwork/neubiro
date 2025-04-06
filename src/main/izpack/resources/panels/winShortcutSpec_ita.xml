@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+<shortcuts>
+  <skipIfNotSupported/>
+
+  <programGroup defaultName="$appGroup"
+                location="applications"/>
+
+  <shortcut
+    name="NeuBiro"
+    target="$INSTALL_PATH\neubiro.exe"
+    commandLine="it"
+    workingDirectory="$INSTALL_PATH"
+    description="NeuBiro"
+    initialState="normal"
+    programGroup="yes"
+    desktop="yes"
+    applications="no"
+    startMenu="no"
+    startup="no">
+  </shortcut>
+
+  <shortcut
+    name="NeuBiro guida utente (PDF)"
+    target="$INSTALL_PATH\docs\pdf\usersguide.pdf"
+    commandLine=""
+    workingDirectory="$INSTALL_PATH"
+    description="NeuBiro guida utente in formato PDF"
+    initialState="normal"
+    programGroup="yes"
+    desktop="no"
+    applications="no"
+    startMenu="no"
+    startup="no">
+    <createForPack name="Documentation" />
+  </shortcut>
+
+  <shortcut
+    name="NeuBiro guida utente (HTML)"
+    target="$INSTALL_PATH\docs\html\usersguide.html"
+    commandLine=""
+    workingDirectory="$INSTALL_PATH"
+    description="NeuBiro guida utente in formato HTML"
+    initialState="normal"
+    programGroup="yes"
+    desktop="no"
+    applications="no"
+    startMenu="no"
+    startup="no">
+    <createForPack name="Documentation" />
+  </shortcut>
+
+  <shortcut
+    name="NeuBiro guida programmatore (PDF)"
+    target="$INSTALL_PATH\docs\pdf\programmersguide.pdf"
+    commandLine=""
+    workingDirectory="$INSTALL_PATH"
+    description="NeuBiro guida programmatore in formato PDF"
+    initialState="normal"
+    programGroup="yes"
+    desktop="no"
+    applications="no"
+    startMenu="no"
+    startup="no">
+    <createForPack name="Documentation" />
+  </shortcut>
+
+  <shortcut
+    name="NeuBiro guida programmatore (HTML)"
+    target="$INSTALL_PATH\docs\html\programmersguide.html"
+    commandLine=""
+    workingDirectory="$INSTALL_PATH"
+    description="NeuBiro guida programmatore in formato HTML"
+    initialState="normal"
+    programGroup="yes"
+    desktop="no"
+    applications="no"
+    startMenu="no"
+    startup="no">
+    <createForPack name="Documentation" />
+  </shortcut>
+
+  <shortcut
+    name="Disinstalla NeuBiro"
+    target="$INSTALL_PATH\Uninstaller\uninstaller.jar"
+    commandLine=""
+    workingDirectory="$INSTALL_PATH"
+    description="Disinstalla NeuBiro"
+    initialState="normal"
+    programGroup="yes"
+    desktop="no"
+    applications="no"
+    startMenu="no"
+    startup="no">
+  </shortcut>
+
+</shortcuts>

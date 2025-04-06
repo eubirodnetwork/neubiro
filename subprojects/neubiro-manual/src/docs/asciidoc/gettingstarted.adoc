@@ -1,0 +1,606 @@
+= NeuBiro: Getting started guide
+:revdate:{date}
+:revnumber: {version}
+:doctype: book
+:icons: fa
+:toc:
+:toclevels: 3
+:toc-title: Table of contents
+:chapter-label: 
+:figure-caption: Figure
+:sectnums:
+:experimental:
+ifndef::imagesdir[:imagesdir: ./images]
+
+// Variables
+:javaversion: 11
+:rversion: 4.1.x
+:javalink: https://adoptium.net/en-GB/temurin/releases/?version=11&package=jre
+:rlink: https://cran.r-project.org
+:installerlink: https://github.com/eubirodnetwork/neubiro/releases
+:groovylink: http://groovy-lang.org[Groovy]
+:griffonlink: http://griffon-framework.org[Griffon]
+:h2link: http://www.h2database.com[H2]
+:docbooklink: http://docbook.org[Docbook]
+:eubirodlink: http://www.eubirod.eu
+// Default width for images
+// :width100: 450
+:width100: 650
+:width75: 450
+:width50: 275
+:width25: 137
+
+ifeval::["{backend}" == "pdf"]
+endif::[]
+
+ifeval::["{backend}" == "html5"]
+endif::[]
+
+// include::_authors.adoc[]
+
+== Introduction
+
+Complex systems of health indicators require access to different sources, continuous update and regular maintenance. *NeuBiro* is open source software for data management, statistical analysis, and routine benchmarking in health care. It is part of a broader framework with vision to create sustainable solution for public information in healthcare in Europe and beyond.
+
+*NeuBiro* has been specifically designed to be:
+
+* Shared = Owned by a Community: Anyone can Join - to develop or use
+* Open Source = Free to Modify and Use, Widely distributable 
+* Industry Independent = Public  
+* Privacy by Design = Legally Viable
+* Distributed = Efficient and Sustainable
+* Standardized = Evidence-based
+* Risk Adjusted = Statistically Robust
+* Multidimensional = Policy Relevant
+
+=== Technological stack
+
+NeuBiro's goal is to process data stream from different sources, run a sequence of statistical operations and deliver a structured report about health related data. It is developed with the help of several open source projects. It uses {groovylink} as main programming language and the {griffonlink} framework to implement the user interface, the internal database is powered by {h2link} and the report is generated with {docbooklink}.    
+
+It aims to be:
+
+* fast
+* modular
+* with flexible configuration
+* with few external dependencies (only R-stat)
+* developed with modern languages and techniques
+* multi-platform (runs on cross-platform Java Virtul Machine)
+
+NeuBiro is also meant to be adapted to different types of analysis: every aspect of the software can be defined through various configurations and additional modules.
+
+== Getting started
+
+This section will guide the user through the installation of the software and its use.
+
+=== Main dependencies
+
+NeuBiro requires additional software to be already installed on the user's computer:
+
+|===
+| Component | Required version
+
+a| _Java Virtual Machine_
+a| {javaversion}
+
+a| _R_
+a| {rversion}
+|===
+
+[WARNING]
+====
+The statistical modules are strictly dependent from the version of R.
+Using a different version of the R interpreter may result in unpredictable errors.
+====
+
+The Java Virtual Machine can be dowloaded from: {javalink}.
+For our scope, it is sufficient to download the JRE and not the entire JDK, which also contains the development tools.
+
+The R interpreter can be downloaded from: {rlink}.
+
+After a successful installation of the above dependencies it will be possible to start the installation of NeuBiro.
+
+=== How to install
+
+NeuBiro is provided with a custom installer program. Its purpose is to prepare all components needed on the destination machine.
+
+The components that are part of the installation package include:
+
+. NeuBiro executable program
+. User's guide
+. Programmer's guide
+. Sample statistical package
+
+The installation program is multi-platform hence can be executed on both Windows and Linux;
+the installer for the latest version can be downloaded at the following link:
+
+`{installerlink}`
+
+[NOTE]
+====
+This document describes the installation for Microsoft Windows. However, the installation steps for all other platforms are identical.
+====
+
+The installation procedure guides the user during all phases of the process.
+Some components are optional and can be omitted. However, at least on first installation, we strongly advise to run a complete install.
+In this way, all sample data will be installed, so that the system can be tested out of the box.
+
+Under Microsoft Windows, an icon on the Desktop and an item on the Start Menu will be also created.
+
+==== Installation steps
+
+To start the installation, just double click on the dowloaded `jar` file. 
+The following images describes each step of the installation process. 
+
+===== Language selection
+
+As a first step, the user can choose the default language set by the installer.
+ 
+.Language selection
+[align="center"]
+image::users/installer/language.png[width={width50}]
+
+===== Welcome screen
+
+A welcome screen shows the version of the software
+
+.Welcome screen
+[align="center"]
+image::users/installer/welcome.png[width={width75}]
+
+===== Information about NeuBIRO
+
+.Information screen
+[align="center"]
+image::users/installer/information.png[width={width75}]
+
+===== License
+
+To proceed with the installation, it is required to accept the EUPL open source software license.
+
+.License
+[align="center"]
+image::users/installer/license.png[width={width75}]
+
+===== Packs selection
+
+The installation package is composed of several packs, some of which are mandatory, while others (like the documentation) can be optionally omitted.
+
+[TIP]
+====
+On first installation. it is advisable to leave the proposed choices so that will be possibile to run a quick test to verify that everything is in place and all the dependencies are working.
+====
+
+.Available packs
+[align="center"]
+image::users/installer/packages.png[width={width75}]
+
+===== Installation path
+
+This path represents the location in which the software will be installed.
+
+[TIP]
+====
+It is better, at least in the first installation, to not to change the proposed destination folder.
+This will help in case of requests to the support team.
+====
+
+.Installation path
+[align="center"]
+image::users/installer/target.png[width={width75}]
+
+[TIP]
+====
+If the installer complains about a non writable directory, please use a path under your home directory.
+====
+
+===== Summary
+
+A summary screen will present all user choices before proceeding.
+There is an option to change any option using the "Previous" button.
+  
+.Installation summary
+[align="center"]
+image::users/installer/summary.png[width={width75}]
+
+===== Progress
+
+.Progress indicator
+[align="center"]
+image::users/installer/progress.png[width={width75}]
+
+===== Desktop and menu shortcuts
+
+On this panel it is possible to change how the shortcuts used to launch NeuBiro will be created.
+
+.Windows shortcuts
+[align="center"]
+image::users/installer/shortcuts.png[width={width75}]
+
+===== Installation completed 
+
+.Installation complete
+[align="center"]
+image::users/installer/finished.png[width={width75}]
+
+At the end of this step, all components will be unpacked and fully installed on the local machine, so the user
+is ready to start working with NeuBiro. 
+
+==== Layout of the installation folder
+
+After the installation, all components will be located under the folder `C:\NeuBiro-{version}`. We will denote this folder as <root> here.
+The layout of the folders created on the destination machine will be the following:
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
+<root> // <1>
++-- docs // <2>
++-- packages // <3>
+  +-- sample-package // <4>
+    +-- data // <5>
+    +-- import // <6>
+    +-- indicators // <7>
+    +-- tools // <8>
+----
+<1> Main installation folder
+<2> Documentation in PDF e HTML format
+<3> Packages folder
+<4> Statistical package main folder
+<5> Sample data set
+<6> Import specifications
+<7> Statistical modules
+<8> Common functions
+
+[NOTE]
+====
+The layout above refers to a standard installation. If the user opted for different choices, 
+the root folder may be different, and some files or folder may not be present. 
+====
+
+== Working with NeuBiro
+
+To work properly with NeuBiro, it needs some components that must be provided by the end user.
+These can be summarized as follow:
+
+* the master data set containing the core data to be analyzed
+* the import specifications, describing how the master dataset and all auxiliary tables shall be loaded in the internal databse
+* the statistical package containing all the code needed to perform the analysis.
+
+=== Overview of the working pipeline
+
+The following image summarizes the entire pipeline of NeuBiro  
+
+.overview of the main workflow
+[ditaa, "main-workflow"]
+....
+
++---------------+  +---------------------------------+  +------------------------------+  +----------------------------+  +--------------------------------+
+| Configuration +->| Data import and Quality Check   +->| Local Statistical processing +->| Transfer to Central Server +->| Central Statistical Processing |
++---------------+  +---------------------------------+  +------------------------------+  +-+--------------------------+  +--------------------------------+
+                   |                                 |  |                              |    :                       ^                     :
+                   | o process import specifications |  |    o prepare data            |    | Collect and aggregate |                     |            
+                   | o populate internal (H2) DB     |  |    o run statistical code    |    |    "local" results    |                   +-+-------------+
+                   | o generate calculated fields    |  |    o create "local" results  |    |    for each centre    |                   |  Generate     |
+                   |                                 |  |                              |    |                       |                   |  "global" PDF |
+                   |                                 |  |                              |    |                       |                   |   report {d}  |
+                   |                                 |  |                              |    +-----------------------+                   +---------------+
+                   +---------------------------------+  +--+---------------------------+         
+                                                           :                   ^
+                                                           |                   |
+                                                           |  for each module  |
+                                                           +-------------------+
+....
+
+=== The user interface
+
+When launched, NeuBiro presents to the user a simple graphical interface. 
+ 
+The user interface is divided in tabs, with each section representing a different step in the pipeline:
+
+* Configuration
+* Import
+* Analysis
+* Transfer
+* Log
+
+=== Configuration
+ 
+The configuration screen is used to enter the basic data of the user and the main language of the interface.
+The main language, if not selected or at the first run, will be inferred by the system language defined on the host operating system.
+Currently, the system supports only English and Italian.
+
+.The configuration tab
+[align="center"]
+image::users/working/config.png[width={width75}]
+
+The lower part of the screen shows all the tables already imported and the numbers of records contained in each of them.
+
+=== Loading your data
+
+==== How to prepare your dataset(s) for NeuBiro
+
+The format used by NeuBiro to load external dataset(s) is CSV (Comma Separated Values) e.g. the following one from the sample package:
+ 
+[source,csv]
+----
+sub_idCentro,idPaziente,dataDiNascita,Sesso,dataDiagnosiDiabete,tipoDiabete,Altezza,idCentro,data,BMI,Colesterolo,Colesterolo_HDL,Colesterolo_LDL,Creatinina,Emoglob.Glicata_HBA1C,Glicemia_a_digiuno,Microalbuminuria,Peso,Pressione_Diastolica,Pressione_Sistolica,Trigliceridi_post_12h_dig,Insulina,Metformina,Ipoglicemizzanti_Orali,Drug_Therapy,Count
+ITE34,5,1930-07-24,F,1993-07-27,2,,ITE34,2001-09-14,,212,201,,,7.6,,,,80,120,,0,0,0,4,1
+ITE34,7,1958-08-07,M,1992-02-26,1,174,ITE34,2002-11-06,25.9,,,,,,195,,49.5,80,105,,1,0,0,1,1
+....
+----
+
+Therefore, each variable (field) in the original dataset must be saved in a record (line) using comma (`,`) as a separator.
+ 
+[source,csv]
+
+Here is the structure and contents of the data directory:
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
++-- <root>/packages/sample-package/data <1>
+    +-- ITE34 <2>
+    |   +-- neubirod_max_activity_table.csv <3>
+    |   `-- neubirod_max_merge_table.csv <3>
+    |   `-- neubirod_mid_merge_table.csv <3>
+    |   `-- neubirod_mid_merge_table.csv <3>
+    |   `-- neubirod_samesize_merge_table.csv <3>
+    |   `-- neubirod_samesize_table.csv <3>
+    |   `-- neubirod_small_merge_table.csv <3>
+    |   `-- neubirod_population_table.csv <4>
+    |   `-- neubirod_diabetic_population_table.csv <4>
+    |   `-- neubirod_georef.csv <4>
+    |   `-- neubirod_siteheader.csv <4>
+    |   `-- neubirod_siteprofile.csv <4>
+    +-- ITE42 <2>
+    |   +-- ...
+    +-- ITE42 <2>
+    |   +-- ...
+    +-- ITF <2>
+    |   +-- ...
+    +-- ITG2A <2>
+    |   +-- ...
+----
+<1> data folder root
+<2> data source folder
+<3> max, mid, samesize, and small personal data 
+<4> population-based tables
+
+[NOTE]
+====
+The suffixes in the names of the datasets indicate special types of data from the EUBIROD application of NeuBIRO (thus "neubirod"). Different sizes of the "Master" merge and "Auxiliary" activity table are denoted by suffixes "max", "mid", "same" and "small". Only one type at a time shall be used in NeuBIRO.
+
+The structure of data folders has been designed to reflect data fragmentation across a geographical network. Each data folder includes different datasets for geocodes, related to different levels of European NUTS codes (https://ec.europa.eu/eurostat/web/nuts/background). For additional details, see the Programmer's Guide.
+====
+
+==== Using the specification file
+
+The first step includes the creation of the internal relational database. This step is driven by the import specifications included in each package, according to a predefined data model.
+ 
+Import specifications are included in a text file containing a description of one or more tables to import as CSV files and, if needed, the definition of new fields.
+
+The specifications follow a custom domain specific language (DSL), specifically tailored to simplify the import process.
+
+The primary table to be imported is included in the master block, which is mandatory. All others will be considered auxiliary (or more generally, "Lookup") tables. 
+
+An example of an import specification file is provided below:
+
+[source,groovy]
+----
+master { // <1>
+  'THETABLE' { // <2>
+    context { // <3>
+      ...
+    }
+    fields { // <4>
+      ...
+    }
+    calculatedFields { // <5>
+      ...
+    }
+  }
+}
+----
+<1> master block
+<2> master table block
+<3> variables definition
+<4> fields definitions
+<5> calculated fields definitions
+
+For more customized applications of the import specification file please refer to the programmers' guide.
+
+==== Running the import process
+
+The import process is triggered by the import button (see figure 13).
+
+The main data that must be defined here are:
+
+* the path and name of the master dataset
+* the path and name of the import specifications file
+* the paths and names of other optional auxiliary tables to be imported
+* "import variables": in addition to the variables included in the common data model, it is possible to specify new variables called "import variables". These are defined by the user in the specification file (see programmer's guide)
+ 
+After the import, the internal database will be populated using all the data sets indicated. These will be necessary for the associated statistical routines to work properly.  
+
+The import must be done before starting the analysis and can be repeated at any time in case of changes or updates to the dataset(s).
+In case of no changes, there is no need to perform the import again as all dataset(s) remain persistent. 
+
+In the EUBIROD sample package, the following files will need to be specified (see above):
+
+* the *Activity Table* 
+* the *Population Table* 
+* the *Diabetic Population Table* 
+* the *Site Header* 
+* the *Site Profile* 
+* the *Geographical Codes* 
+
+The Import panel will also list the names of additional variables in the imported data.
+
+A screenshot of the Import panel is shown below:
+
+.Import Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_import_panel.png[Tiger,470,393,float="right",align="center"]
+
+Pressing the "Import" button will start the import process of the Master table and the Lookup tables (only at first run).
+An "Import lookup table" button will appear afterwards to independently repeat the import only for *all* Lookup tables.
+The results of the process will be progressively displayed on the Status Bar of the Import Panel.
+The contents of the NeuBIRO database will appear in the Configuration Panel, which will show all the datasets loaded, together with the total number of records.
+
+[WARNING]
+====
+Pressing the Import/Import lookup tables button will *completely* wipe out the previous contents of the related component in the NeuBIRO internal database (Master and/or Lookup table). 
+Use with caution!
+====
+
+This operation can take several minutes and depends on the amount of data to be imported; during the import the panel 
+will be dimmed and the status bar will show information about the ongoing activity.  
+
+At the end of the import all the data, as described in the specifications file, will be ready to be used for the analysis step.
+
+=== Running the analysis
+
+==== Basic options 
+
+The core of the statistical system is represented by the Analysis panel. The goal of this panel is to trigger all statistical routines made available in the package, 
+to produce the final pdf report.  
+
+Through the graphical interface, the user can directly determine the sequential flow of the analysis by selecting specific sets of key parameters, including the following: 
+
+* the *`Engine type`*, indicating whether the statistical routines should tap into the individual data stored in the H2 database, created according to the specifications provided in the .specs file (*"Local"*), or use aggregate data previously produced by NeuBIRO (*"Central"*), using the column names found in each table included in a list of files (appearing in the lower portion) under *`Filename`*. This is a necessary first step where the user specified the type of the analysis run by the statistical engine. This can be either Local or Central (presented later). The first selection field in the panel is set on "Local" by default. This type of analysis runs on the dataset(s) specified in the import process. These are normally including individual records and are accessible only to the local data custodian.
+
+* the *`Indicators folder`*, indicating the location of statistical routines (modules) that must be included in the analysis
+
+* the *`Work folder`*, indicating the root directory in which all consecutive outputs will be saved
+
+* the *`Select unit`*, allowing to filter data, based on the values of one column in the input data. One or more target values can be specified in the additional text field on the right. Using the wildcard character '*' in this entry will create multiple reports, one for each unique value found for the column specified in the input field.
+
+Additional parameters include:
+
+* *`Language`* for the language used in writing the report
+
+* *`Highlights`* allowing to choose one column whose values will identify subgroups to be variously highlighted (e.g. using different colours)
+
+* *`Reference`* to specify a benchmark that could be either internal (average from the master table), or external (using an external file that needs to be specified)
+
+A typical use of the analysis panel can be shown by running the sample package. 
+
+The sample package includes many indicators that are provided under the directory: <root>/packages/sample-package/indicators.
+
+The sample package includes a specific indicator that runs all other routines in series:
+
+* the *BIRO Report 2017* 
+
+The figure below presents an example of a basic analysis that will use the associated routine to produce one report for the ITF data file:
+
+.Analysis Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_analysis_panel.png[Tiger,469,397.5,float="right",align="center"]
+
+==== Finding results in the work folder
+
+The analysis creates several files and folders under the specified work directory.
+The basic layout is the following:  
+
+[tree, symbols="simple", subs="attributes,verbatim"]
+----
++-- <work root>
+ +-- SINGLE
+   |  +--  <indicator_1>
+   |  +--  <indicator_2>
+   |  +--  .....
+   |  +--  <indicator_n>
+   |  +--  report
+----
+
+A folder called `SINGLE` folder will contain all results for the complete dataset. There will be a folder for each indicator, named correspondingly to the `id` of the indicator. The `report` folder will include the html and pdf reports generated.
+ 
+These folders can be useful for debugging purposes as in each one all the output from the statistical 
+routine will be written into a file named `indicator.log`. In case something goes wrong, this file can be used
+to identify the problem.
+
+The "Local" Engine can be also run with a Selector variable and wildcard character "*". This configuration will create a different report for each level of the Selector column in different subdirectories of the Work folder, where the html/pdf outputs will be located in the directory "report". The same subdirectories will also include, in each indicator-specific sub-directory, the zip file including all the aggregate results (statistical objects) in compressed format. If the same analysis is conducted with a set of values (or just one), only reports for the specified categories will be saved in the work root.
+
+The following shows how to launch this particular configuration:
+
+.Selector with Local Engine in the NeuBIRO main interface
+[align="center"]
+image::neubiro_analysis_selector.png[Tiger,400,400,float="right",align="center"]
+
+=== Transfer the aggregated data
+
+The transfer panel is a simple tool designed to send the statistical objects towards a central server, using user credentials. 
+Although currently operating on an ftp protocol, the tool has been integrated with a web service that can offer more efficient and stable management in a secure environment.
+
+A picture of the transfer panel is shown below.
+
+.Transfer Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_transfer.png[Tiger,400,400,float="right",align="center"]
+
+=== Central engine: pooling data from different federated sites
+
+The separate objects created by separate analysis (e.g. using all datasets in the sample package) can be run using the "Central" Engine Type. 
+
+This type of engine is special, as it works only on aggregate data, bypassing completely the statistical descriptor files indicator.specs. 
+
+In this way, all routines will work using only aggregate data. In this case, only the indicator.r files and sourced functions will be used by the Engine (the source code of R files may be organized into local and central components).
+
+The following figure shows how to use the Analysis panel with a "Central" Engine Type:
+
+.Central Engine in the NeuBIRO main interface
+[align="center"]
+image::neubiro_central.png[Tiger,393,404,float="right",align="center"]
+
+The report with the results obtained using the Central Engine from the compilation of the three sub-levels, is identical to the one produced for the whole dataset with the Local Engine.
+
+An example of a table obtained with the Local Engine on the entire ITF dataset is the following:
+.Local Engine in the NeuBIRO main interface for the ITF dataset:
+[align="center"]
+image::neubiro_local_ITF.png[Tiger,393,404,float="right",align="center"]
+
+The result is absolutely identical to the one produced by the Central Engine on the different NUTS level composing the ITF dataset
+
+Here is the index of the report compiled for all datasets included in the sample package:
+
+.Central Engine succeeded in the NeuBIRO main interface
+[align="center"]
+image::neubiro_central_final_report_index.png[Tiger,400,400,float="right",align="center"]
+
+The pooled report for all datasets will be as follows:
+
+.Central Engine succeeded in the NeuBIRO main interface
+[align="center"]
+image::neubiro_central_final_report.png[Tiger,400,400,float="right",align="center"]
+
+The above output corresponds to the sum of all tables from individual reports.
+The complexity of the solution would grow as more complex indicators are added, e.g. computing standardized rates using risk adjustment routines for the whole federated network.
+
+== Log panel
+
+The log panel will include information sent by the execution of any panel in NeuBIRO. The panel will include information on loaded datasets, contents of variables and number of observations, portions of code executed and closing messages of correct execution.
+
+A picture of the log panel is shown below.
+
+.Log Panel in the NeuBIRO main interface
+[align="center"]
+image::neubiro_log_import.png[Tiger,400,400,float="right",align="center"]
+
+== Conclusion
+ 
+In this manual we covered all the steps needed to start your analysis with NeuBiro.
+  
+If you need help please refer to the EUBIROD Netwok community at {eubirodlink}  
+
+== FAQ
+
+The installer complains that the install directory is not writable, how can I proceed?::
++
+--
+The installer attempts to create the installation directory on `c:\`. On some system (eg Windows 10) this
+folder cannot be accessed without specific permissions.
+
+To solve the problem, specify a target directory under your personal user folder eg `C:\Users\myname\NeuBiro-x.x.x`.
+--
+
+include::_libraries.adoc[]
+
+include::_acknowledgements.adoc[]

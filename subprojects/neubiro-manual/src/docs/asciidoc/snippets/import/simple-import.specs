@@ -1,0 +1,32 @@
+master {
+  'THETABLE' {
+    label = "Master table file"
+    mandatory = true
+
+    // tag::field[]
+    fields {
+      'BIRTH_DATE' { // <1>
+        type = "varchar" // <2>
+        size = 10
+      }
+    }
+    // end::field[]
+
+    calculatedFields {
+      // tag::calculated_field[]
+      'RECORD_DATE' {
+        persist = false // <1>
+        type = "date"
+        value = { record, context -> // <2>
+          try {
+            Date.parse("yyyy-MM-dd", record['BIRTH_DATE']) // <3>
+          }
+          catch(Exception) { // <4>
+            null
+          }
+        }
+      }
+      // end::calculated_field[]
+    }
+  }
+}

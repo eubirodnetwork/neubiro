@@ -1,0 +1,4 @@
+AUTHORS
+
+Stefano Gualdi <stefano.gualdi@gmail.com>
+Fabrizio Carinci <research@fabcarinci.net>

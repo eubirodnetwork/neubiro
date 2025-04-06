@@ -1,0 +1,37 @@
+/*
+ * Copyright 2016 Fabrizio Carinci, Stefano Gualdi, EUBIROD Network.
+ *
+ * Licensed under the European Union Public Licence (EUPL), Version 1.1 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://joinup.ec.europa.eu/software/page/eupl/licence-eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @author Fabrizio Carinci <fabcarinci@gmail.com>
+ * @author Stefano Gualdi   <stefano.gualdi@gmail.com>
+ */
+
+indicator {
+ id = '2.2.3.1'
+ description = "Systolic Blood Pressure"
+ description_en = "Systolic Blood Pressure"
+ hidden = false
+ excludeReport = false
+ dependsOn = ['setup']
+ input {
+  table = "MASTER_LOCF"
+  sql="""SELECT                    CL_SBP,TYPE_DM, COUNT(*) as COUNT 
+         FROM MASTER_LOCF GROUP BY CL_SBP,TYPE_DM 
+         ORDER BY                  CL_SBP,TYPE_DM"""
+  file = "input.csv"
+  }
+  output {files = ["report.xml"]}
+}

@@ -1,0 +1,3 @@
+== Authors
+
+Fabrizio Carinci MSc footnote:[University of Bologna, Bologna, Italy], Stefano Gualdi footnote:[Hub for International Health Research, Italy], Concetta Tania Di Iorio MPH footnote:[Serectrix snc, Italy], Scott Cunningham PhD footnote:[University of Dundee, Scotland], Massimo Massi Benedetti MD footnote:[Hub for International Health Research, Italy] on behalf of the EUBIROD Network

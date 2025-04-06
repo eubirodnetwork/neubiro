@@ -1,0 +1,24 @@
+= NeuBiro
+
+== Prerequisites
+
+* JDK 11
+* R version 3.0.1
+
+== Available tasks
+
+=== Create single files distribution
+
+  `./gradlew dist`
+
+=== Create the installer
+
+  `./gradlew installer`
+
+=== Execute NeuBiro in dev mode
+
+  `./gradlew neubiro-app:run`
+
+=== Create IntelliJ IDEA project
+
+  `./gradlew idea`

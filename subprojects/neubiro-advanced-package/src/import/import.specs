@@ -1,0 +1,467 @@
+/*
+ * Copyright 2017 Stefano Gualdi, Fabrizio Carinci, EUBIROD network.
+ *
+ * Licensed under the European Union Public Licence (EUPL), Version 1.1 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://joinup.ec.europa.eu/software/page/eupl/licence-eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @author Stefano Gualdi <stefano.gualdi@gmail.com>
+ */
+
+master {
+  'MASTER' {
+
+    label = "BIRO Master file ADVANCED"
+
+    mandatory = true
+
+    // Check sul record. Viene eseguito prima di salvare il record nella tabella di destinazione
+    recordCheck = { record ->
+      // Crea una copia del record 
+      def newRecord = record
+      def action = "SAVE"
+      def message
+
+      // Coherency check
+      // Data di nascita > episode date
+      if (newRecord['dataDiNascita'] > newRecord['data']) {
+        newRecord['data'] = null
+      }
+
+      // out of range
+      def ranges = [
+        'Peso'   : [5, 300],
+        'Altezza': [30, 300]
+      ]
+      ranges.each { f, r ->
+        val = newRecord[f]
+        if (val) {
+          if (val < r[0] || val > r[1]) {
+            newRecord[f] = null
+          }
+        }
+      }
+
+      return [
+        action : action,
+        message: message,
+        record : newRecord
+      ]
+    }
+
+    // I nomi di campo sono quelli finali e non quelli del dataset in entrata
+    locf {
+      table = "FINAL_LOCF"
+      keys = ['PAT_ID'] // Compatta per PAT_ID
+      order = ['PAT_ID', 'EPI_DATE'] // Ordina per PAT_ID e EPI_DATE
+      // exclude = ['CHOL', 'HDL', 'LDL'] // Non eseguire l'algoritmo LOCF su campi CHOL, HDL e LDL 
+    }
+
+    fields {
+      // BIRO REF: BIRO001 - Patient ID
+      'idPaziente' {
+        nameTo = "PAT_ID"
+        type = "varchar"
+        size = 12
+        mandatory = true
+      }
+
+      // BIRO REF: BIRO002 - Data Source ID
+      'DS_ID' {
+        type = "varchar"
+        size = 10
+      }
+
+      // BIRO REF: BIRO003 - Type Of Diabetes
+      'tipoDiabete' {
+        nameTo = "TYPE_DM"
+        type = "smallint"
+        valid = { value -> value in [1, 2, 3] } // Se restituisce true il campo è valido
+      }
+
+      // BIRO REF: BIRO004 - Sex
+      'Sesso' {
+        nameTo = "SEX"
+        type = "varchar"
+        size = 1
+      }
+
+      // BIRO REF: BIRO005 - Date of Birth
+      'dataDiNascita' {
+        nameTo = "DOB"
+        format = "yyyy/MM/dd"
+        type = "date"
+      }
+
+      // BIRO REF: BIRO006 - Date of Diagnosis
+      'dataDiagnosiDiabete' {
+        nameTo = "DT_DIAG"
+        format = "yyyy/MM/dd"
+        type = "date"
+      }
+
+      // BIRO REF: BIRO007 - Episode Date
+      'data' {
+        nameTo = "EPI_DATE"
+        format = "yyyy/MM/dd"
+        type = "date"
+      }
+
+      // BIRO REF: BIRO008 - Smoking Status
+      'SMOK_STAT' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO009 - Cigarettes per day
+      'CIGS_DAY' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO010 - Alcohol Intake
+      'ALCOHOL' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO011 - Weight
+      'Peso' {
+        nameTo = "WEIGHT"
+        type = "decimal"
+        valid = { val -> val < 5 || val > 300 }
+      }
+
+      // BIRO REF: BIRO012 - Height
+      'Altezza' {
+        nameTo = "HEIGHT"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO013 - Body Mass Index
+      'BMI' {
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO014 - Systolic Blood Pressure
+      'Pressione_Sistolica' {
+        nameTo = "SBP"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO015 - Diastolic Blood Pressure
+      'Pressione_Diastolica' {
+        nameTo = "DBP"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO016 - HbA1c
+      'Emoglob_Glicata_HBA1C' {
+        nameTo = "HBA1C"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO017 - Creatinine
+      'Creatinina' {
+        nameTo = "CREAT"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO018 - Microalbumin
+      'Microalbuminuria' {
+        nameTo = "MA_TEST"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO019 - Total Cholesterol
+      'Colesterolo' {
+        nameTo = "CHOL"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO020 - HDL
+      'Colesterolo_HDL' {
+        nameTo = "HDL"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO021 - Triglycerides
+      'Trigliceridi_post_12h_dig' {
+        nameTo = "TG"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO022 - Retinal Examination
+      'RETINAL_EXAM' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO023 - Retinopathy Status
+      'RETINA' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO024 - Maculopathy Status
+      'MACULA' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO025 - Foot Examination
+      'FOOT_EXAM' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO026 - Foot Pulses
+      'PULSES' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO027 - Foot Sensation
+      'FTSENS' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO028 - End Stage Renal Therapy
+      'ESRF' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO029 - Renal Dialysis
+      'DIALYSIS' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO030 - Renal Transplant
+      'TRANSPLANT' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO031 - Stroke
+      'STROKE' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO032 - Active Foot Ulcer
+      'ULCER' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO033 - Myocardial Infarction
+      'MI' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO034 - Laser
+      'LASER' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO035 - Hypertension
+      'HYPERTENSION' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO036 - Blindness
+      'BLIND' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO037 - Amputation
+      'AMPUT' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO038 - Antihypertensive Medication
+      'HYPERT_MED' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO039 - Hypoglycemic Drug Therapy
+      'Ipoglicemizzanti_Orali' {
+        nameTo = "DRUG_THERAPY"
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO040 - Oral Drug Therapy
+      'ORAL_THERAPY' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO041 - Pump Therapy
+      'Insulina' {
+        nameTo = "PUMP_THERAPY"
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO042 - Nasal Therapy
+      'NASAL_THERAPY' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO043 - Average Injections
+      'INJECTIONS' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO044 - Self Monitoring
+      'SELF_MON' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO045 - Diabetes Specific Education
+      'EDUCATION' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO046 - LDL
+      'Colesterolo_LDL' {
+        nameTo = "LDL"
+        type = "decimal"
+      }
+
+      // BIRO REF: BIRO047 - Alcohol Status
+      'ALC_STAT' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO048 - Patient Enrolment in DMP for Diabetes
+      'DMP_ENROL' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO049 - Data of commencement of period of patient Activity
+      'AD_START_DATE' {
+        type = "varchar"
+        size = 10
+      }
+
+      // BIRO REF: BIRO050 - Reason for the commencement of activity period
+      'AD_START_REASON' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO051 - Data of completion of period of activity
+      'AD_END_DATE' {
+        type = "varchar"
+        size = 10
+      }
+
+      // BIRO REF: BIRO052 - Reason for the completion of activity period
+      'AD_END_REASON' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO053 - Lipid Lowering Therapy
+      'LIPID_THERAPY' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO054 - Anti-platelet Therapy
+      'ANTIPLATELET_THERAPY' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO055 - Sulphonylurea Therapy
+      'SUPHONYLUREAS' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO056 - Biguanide Therapy
+      'Metformina' {
+        nameTo = "BIGUANIDES"
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO057 - Glucosidase Inhibitor Therapy
+      'GLUCOSIDASE_INHIBITOR' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO058 - Glitazone Therapy
+      'GLITAZONES' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO059 - Glinide Therapy
+      'GLINIDES' {
+        type = "smallint"
+      }
+
+      // BIRO REF: BIRO099 - Sub data source identifier (Related to DS_ID)
+      'idCentro' {
+        nameTo = "SUB_DS_ID"
+        type = "varchar"
+        size = 10
+      }
+    }
+
+    calculatedFields {
+      'BMI_VAL' {
+        type = "decimal"
+        value = { record, context ->
+          if (!record['BMI']) {
+            if (record['Altezza'] && record['Peso']) {
+              h = record['Altezza']
+              w = record['Peso']
+              res = w / ((h / 100)**2)
+              res.round(1)
+            } else {
+              null
+            }
+          } else {
+            record['BMI']
+          }
+        }
+      }
+
+      'CL_BMI' {
+        type = "int"
+        value = { record, context ->
+          if (record['BMI']) {
+            val = record['BMI']
+            switch (val) {
+              case { it >= 0.0 && it < 18.5 }:
+                1
+                break
+              case { it >= 18.5 && it < 25.0 }:
+                2
+                break
+              case { it >= 25.0 && it < 30.0 }:
+                3
+                break
+              case { it >= 30.0 }:
+                4
+                break
+              default:
+                null
+            }
+          }
+        }
+      }
+
+      'DIAB_DUR' {
+        type = "int"
+        value = { record, context ->
+          println record["dataDiagnosiDiabete"].ageInYearsFrom(record['data'])
+          record["dataDiagnosiDiabete"].ageInYearsFrom(record['data'])
+        }
+      }
+
+      'AGE' {
+        // persist = false
+        type = "int"
+        value = { record, context ->
+          println record["dataDiNascita"].ageInYearsFrom(record['data'])
+          record["dataDiNascita"].ageInYearsFrom(record['data'])
+        }
+      }
+    }
+  }
+}

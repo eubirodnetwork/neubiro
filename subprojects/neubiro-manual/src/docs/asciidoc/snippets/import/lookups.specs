@@ -1,0 +1,42 @@
+lookups {
+  'LOOKUP_TABLE_ONE' {
+    label = "Simple lookup table"
+    mandatory = true
+    skipAutoId = true
+    fields {
+      'CODE' {
+          type = "varchar"
+          size = 16
+      }
+      'NAME' {
+          type = "varchar"
+          size = 6
+      }
+    }
+
+    calculatedFields {
+      'DATE_START' {
+        persist = true
+        type = "date"
+        value = { record, context ->
+          try {
+            Date.parse("yyyy-MM-dd", record['DATA_INIZIO'])
+          }
+          catch(Exception) {
+            null
+          }
+        }
+      }
+    }
+
+    // tag::indexes[]
+    indexes {
+      'codeidx' {
+        primary = true
+        unique = true
+        fields = ['CODE']
+      }
+    }
+    // end::indexes[]
+  }
+}

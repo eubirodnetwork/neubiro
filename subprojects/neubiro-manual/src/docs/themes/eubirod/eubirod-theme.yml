@@ -1,0 +1,114 @@
+extends: base
+title-page:
+  align: center
+  title:
+    font-style: bold
+  subtitle:
+    font-style: bold
+  logo:
+    image: neubiro-splash.png
+font:
+  catalog:
+    # Noto Serif supports Latin, Latin-1 Supplement, Latin Extended-A, Greek, Cyrillic, Vietnamese & an assortment of symbols
+    Noto Serif:
+      normal: notoserif-regular-subset.ttf
+      bold: notoserif-bold-subset.ttf
+      italic: notoserif-italic-subset.ttf
+      bold_italic: notoserif-bold_italic-subset.ttf
+    # M+ 1mn supports ASCII and the circled numbers used for conums
+    M+ 1mn:
+      normal: mplus1mn-regular-subset.ttf
+      bold: mplus1mn-bold-subset.ttf
+      italic: mplus1mn-italic-subset.ttf
+      bold_italic: mplus1mn-bold_italic-subset.ttf
+page:
+  layout: portrait
+  margin: [0.75in, 0.75in, 0.75in, 0.75in]
+  size: Letter
+base:
+  align: justify
+  font-color: #333333
+  font-family: Noto Serif
+  font-size: 10
+  line-height-length: 17
+  line-height: $base-line-height-length / $base-font-size - 0.7
+  vertical-spacing: $base-line-height-length
+image:
+  border-color: #aaaaaa
+  border-width: 0.5
+caption:
+  align: center
+  font-style: bold
+prose:
+  margin-top: 1
+  margin-bottom: 1
+  text-indent: 5
+outline_list:
+  item_spacing: 0.5
+block:
+  margin-top: 4
+  margin-bottom: 4
+table:
+  align: justify
+  font-color: #333333
+  font-family: Helvetica
+  font-size: 9
+  line-height-length: 17
+  line-height: $base-line-height-length / $base-font-size - 0.5
+  vertical-spacing: $base-line-height-length
+conum:
+  line-height: 1.5
+  font-size: $base-font-size
+  font-color: #b12146
+  font-family: M+ 1mn
+  glyphs: circled # filled
+code:
+  background-color: #f5f5f5
+#  border-color: #aaaaaa
+  font-size: 9
+  font-family: M+ 1mn
+  line-height-length: 12
+  line-height: $base-line-height-length / $base-font-size - 0.40
+  vertical-spacing: $base-line-height-length
+heading:
+  font-color: #262626
+  h1-font-size: $base-font-size * 1.25
+  h2-font-size: $base-font-size * 1.25
+  h3-font-size: $base-font-size * 1.25
+  h4-font-size: $base-font-size * 1.25
+  font-style: bold
+  line-height: 0.5
+  margin-top: $vertical-spacing
+  margin-bottom: $vertical-spacing
+link:
+  font-color: #002FA7
+outline-list:
+  indent: $base-font-size * 1.5
+header:
+  border-style: solid
+  border-color: #aaaaaa
+  font-size: 10
+  height: 0.60in
+  line-height: 0.75
+  recto:
+    left:
+      content: '{section-or-chapter-title}'
+    right:
+  verso:
+    left:
+    right:
+      content: '{section-or-chapter-title}'
+footer:
+  border-style: solid
+  border-color: #aaaaaa
+  font-size: 10
+  height: 0.60in
+  line-height: 0.75
+  recto:
+    left:
+    right:
+      content: '*{page-number}*'
+  verso:
+    left:
+      content: '*{page-number}*'
+    right:

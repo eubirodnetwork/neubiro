@@ -1,0 +1,2 @@
+YEAR,COUNTRY,DS_TYPE,DS_NAME,DS_DENOM,DS_AREA,DS_WEBSITE,DS_ADDRESS_1,DS_ADDRESS_2,DS_ADDRESS_3,DS_ADDRESS_4,DS_POST_CODE,DS_C_CONTACT,DS_C_EMAIL,DS_T_CONTACT,DS_T_EMAIL,SUB_DS_ID
+2012,ITALY,4,Ascoli Piceno,157471,[European Union].[Italy].[CENTRO].[Marche].[Ascoli Piceno],www.diabete.ascolipiceno.it,Ascoli Piceno,Via Strada 1,,,63100,contact_name,contact@diabete.ascolipiceno.it,t_contact_name,t_contact@diabete.ascolipiceno.it,ITE34

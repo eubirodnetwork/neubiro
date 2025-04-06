@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2016 Stefano Gualdi, EUBIROD Network.
+  ~
+  ~ Licensed under the European Union Public Licence (EUPL), Version 1.1 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~       http://joinup.ec.europa.eu/software/page/eupl/licence-eupl
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<book xmlns="http://docbook.org/ns/docbook" lang="en" version="5.0">
+
+ <info>
+ 
+  <title>BIRO System Statistical Report</title>
+
+  <subtitle>
+   <inlinemediaobject>
+    <imageobject>
+      <imagedata align="center" fileref="resources/eubirod-network-logo_small.png" width="10%" format="PNG"/>
+    </imageobject>
+   </inlinemediaobject>
+  </subtitle>
+
+  <subtitle>
+   <para>
+    <emphasis role="normal">BIRO report created on: ${metadata.timestamp}</emphasis>
+    <emphasis role="normal">CENTRE(S): ${metadata.operator}</emphasis>
+    <emphasis role="normal">YEAR: ${metadata.year}</emphasis>
+   </para>
+   <para></para>
+   <para></para>
+   <inlinemediaobject>
+    <imageobject>
+     <imagedata align="center" fileref="resources/wordcloud_small.png" width="10%" format="PNG"/>
+    </imageobject>
+   </inlinemediaobject>
+   <para></para>
+  </subtitle>
+
+  <subtitle>
+   <para><emphasis role="red">Powered by:</emphasis></para>
+   <inlinemediaobject>
+    <imageobject>
+     <imagedata align="center" fileref="resources/neubiro-logo-slim.png" width="5%" format="PNG"/>
+    </imageobject>
+   </inlinemediaobject>
+
+   <emphasis role="bverysmall">
+    A report produced by the open source BIRO System, NeuBIRO Release 1.0, December 2019.
+   </emphasis>
+   <emphasis role="bverysmall">
+    Software available under the terms of the European Public License (EUPL) at http://www.eubirod.eu.
+   </emphasis>
+  </subtitle>
+
+ </info>
+ 
+ <toc/>
+
+ <preface xml:id="EUBIROD_Report_preface"><?dbhtml dir="html"?>
+  <title>Parameters</title>
+  <para>
+   <emphasis role="red">Parameters used for the production of this report</emphasis>
+   <emphasis role="normal">Engine type: ${metadata.engine_type}</emphasis>
+   <emphasis role="normal">Input files: ${metadata.input_files}</emphasis>
+   <emphasis role="normal">Selection: ${metadata.select_unit}</emphasis>
+   <emphasis role="normal">Reference: ${metadata.reference}</emphasis>
+   <emphasis role="normal">External reference files: ${metadata.reference_files}</emphasis>
+   <emphasis role="normal">Highlights: ${metadata.funnel_group}</emphasis>
+  </para>
+ </preface>
+
+ ${body}
+
+ <appendix xml:id="EUBIROD_Report_appendix"><?dbhtml dir="html"?>
+
+ <title>List of Authors and Contributors</title>
+
+  <para></para>
+  <para></para>
+  <emphasis role="bmidsize">The NeuBIRO Development Team</emphasis>
+  <para>
+   <emphasis role="bsmall">Coordination and Management:</emphasis>
+   <emphasis role="verysmall">
+    Fabrizio Carinci, University of Bologna, Italy, fabrizio.carinci@unibo.it
+   </emphasis>
+   <emphasis role="verysmall">
+    Massimo Massi Benedetti, Hub for International health ReSearch (HIRS), Italy, massi@hirs-research.it
+   </emphasis>
+  </para>
+  <para>
+   <emphasis role="bsmall">Statistical Programming:</emphasis>
+   <emphasis role="verysmall">
+    Fabrizio Carinci, Serectrix snc, Italy, f.carinci@serectrix.eu
+   </emphasis>
+  </para>
+  <para>
+   <emphasis role="bsmall">Development and distribution of NeuBIRO:</emphasis>
+   <emphasis role="verysmall">
+    Stefano Gualdi, Italy, stefano.gualdi@gmail.com
+   </emphasis>
+  </para>
+  <para>
+   <emphasis role="bsmall">Privacy Evaluation and Impact Assessment:</emphasis>
+   <emphasis role="verysmall">
+     Concetta Tania Di Iorio, Serectrix snc, Italy, ct.diiorio@serectrix.eu
+   </emphasis>
+  </para>
+  <para>
+   <emphasis role="bsmall">Data Dictionary and Standardized Definitions:</emphasis>
+   <emphasis role="verysmall">
+    Scott Cunningham, University of Dundee, Scotland, UK, scott.cunningham@nhs.net
+   </emphasis>
+  </para>
+
+  <para></para>
+  <para>
+   <para></para>
+   <emphasis role="bmidsize">The EUBIROD Network of Diabetes Data Sources</emphasis>
+   <para></para>
+   <emphasis role="verysmall">
+    Astrid Lavens, Scientific Institute of Public Health, Belgium, Astrid.Lavens@sciensano.be
+   </emphasis>
+   <emphasis role="verysmall">
+    Vasos Scoutellas, Ministry of Health, Cyprus, VScoutellas@mphs.moh.gov.cy
+   </emphasis>
+   <emphasis role="verysmall">
+    Tamara Poljicanin, Vuk Vrhovac University, Croatia, tamara.poljicanin@idb.hr
+   </emphasis>
+   <emphasis role="verysmall">
+    Peter Rossing, National Diabetes Register, Denmark, peter.rossing@regionh.dk
+   </emphasis>
+   <emphasis role="verysmall">
+    Janos Sandor, University of Debrecen, Hungary, janos.sandor@med.unideb.hu
+   </emphasis>
+   <emphasis role="verysmall">
+    Paolo Di Bartolo, Ausl Romagna, paolo.dibartolo@auslromagna.it
+   </emphasis>
+   <emphasis role="verysmall">
+    Joseph Azzopardi, University of Malta, Malta, bonstan2000@yahoo.co.uk
+   </emphasis>
+   <emphasis role="verysmall">
+    Karianne Fjeld Løvaas, NOKLUS, Norway, karianne.loevaas@noklus.no
+   </emphasis>
+   <emphasis role="verysmall">
+    Przemyslawa Jarosz-Chobot, Medical University of Silesia, Poland, przemka1@o2.pl
+   </emphasis>
+   <emphasis role="verysmall">
+    Joanna Polanska, Medical University of Silesia, Poland, joanna.polanska@polsl.pl
+   </emphasis>
+   <emphasis role="verysmall">
+    Simion Pruna, Telemedica Consulting, Romania, simion.pruna@telemed.ro
+   </emphasis>
+   <emphasis role="verysmall">
+    Iztok Stotl, University of Ljubljana, Slovenia, iztok.stotl@guest.arnes.si
+   </emphasis>
+   <emphasis role="verysmall">
+    Anna Novials, IDIBAPS, Spain, anovials@clinic.ub.es
+   </emphasis>
+   <emphasis role="verysmall">
+    Scott Cunningham, University of Dundee, Scotland, UK, scott.cunningham@nhs.net
+   </emphasis>
+   <emphasis role="verysmall">
+    Simon de Lusignan, University of Oxford, UK, simon.delusignan@phc.ox.ac.uk
+   </emphasis>
+  </para>
+
+ </appendix>
+
+</book>
